@@ -13,11 +13,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import net.dongliu.apk.parser.bean.ApkMeta;
@@ -28,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class HelloApplication extends Application {
@@ -217,8 +214,6 @@ public class HelloApplication extends Application {
                             updateInfo.addPatch(oldVersion, bean);
                         }
                     }
-                } else {//给个空对象
-                    updateInfo.setPatchInfo(Map.of());//java9不可变map // new HashMap<>(););
                 }
                 JsonUtil.createJsonFile(updateInfo, "out/dits/" + newVersionName + "/updateVersion.json");
                 ToastUtil.toast("创建完成");
