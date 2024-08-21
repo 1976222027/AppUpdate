@@ -39,9 +39,12 @@ javafx {
     modules = ['javafx.controls', 'javafx.fxml']
 }
 
-def mVersion = '1.1'
-
-group 'com.mhy'
+Properties properties = new Properties()
+properties.load(new FileInputStream('gradle.properties'))
+def GROUP_NAME = properties.getProperty('GROUP_NAME')
+def mVersion = properties.getProperty("VERSION_NAME");
+//版本
+group GROUP_NAME
 version mVersion
 
 dependencies {

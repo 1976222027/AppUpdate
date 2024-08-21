@@ -20,13 +20,11 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import net.dongliu.apk.parser.bean.ApkMeta;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 
 public class HelloApplication extends Application {
     private static JSONObject config;
@@ -364,8 +362,14 @@ public class HelloApplication extends Application {
         scrollPane.setContent(root);
         scrollPane.setFitToWidth(true); // 不显示横向滚动条
         Scene scene = new Scene(scrollPane, 600, 700);
-
-        primaryStage.setTitle("制作apk差分包");
+        String myValue = "";
+        try {
+            Properties props = new Properties();
+            props.load(new FileInputStream("gradle.properties"));
+            myValue = props.getProperty("VERSION_NAME");
+        } catch (Exception e) {
+        }
+        primaryStage.setTitle("制作apk差分包v" + myValue);
         primaryStage.setScene(scene);
         primaryStage.show();
 

@@ -1,8 +1,10 @@
 #### 数据格式
-配置java环境 
+配置java 9+环境 
 生成工具 运行gradle任务sources2Jar生成jar包 拷走out文件夹去使用
 
 用于生成补丁的俩包要用一个渠道的包，对于美团多渠道，这样补丁不会影响渠道信息，原来是啥渠道，补丁合成新包后还是啥渠道，随旧包。
+
+![](out/AppUpdate.png)
 
 使用：
 [github下载release](https://github.com/1976222027/AppUpdate/releases) 
