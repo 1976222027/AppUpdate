@@ -104,7 +104,7 @@ public class HelloApplication extends Application {
         Label info = new Label();
         info.setTextFill(Color.MAGENTA);
         info.setBorder(new Border(new BorderStroke(Color.GREEN, BorderStrokeStyle.SOLID, new CornerRadii(5), new BorderWidths(2))));
-        info.setMaxWidth(480);
+        info.setMaxWidth(560);
         info.setWrapText(true);
         // 创建一个垂直布局容器
         VBox vbox = new VBox();
@@ -126,8 +126,8 @@ public class HelloApplication extends Application {
         //初始化设置行数
         textField2.setPrefRowCount(3);
         //设置宽高
-        textField2.setPrefWidth(480);
-        textField2.setPrefHeight(70);
+        textField2.setPrefWidth(560);
+        textField2.setPrefHeight(60);
         upMessage = config.getString("message");
         if (upMessage != null && !upMessage.isEmpty()) {
             textField2.setText(upMessage);
@@ -144,6 +144,8 @@ public class HelloApplication extends Application {
         textField5.setPrefRowCount(2);
         textField5.setText(upPatchUrl);
         Button update = new Button("2.创建升级清单文件");
+        update.setTextFill(Color.WHITE);
+        update.setBackground(new Background(new BackgroundFill(Color.GREEN,  new CornerRadii(8), null)));
         Separator separator2 = new Separator(); // 默认是水平分隔符
         separator2.setOrientation(Orientation.VERTICAL);
         update.setMinHeight(30);
@@ -216,9 +218,9 @@ public class HelloApplication extends Application {
                     }
                 }
                 JsonUtil.createJsonFile(updateInfo, "out/dits/" + newVersionName + "/updateVersion.json");
-                ToastUtil.toast("创建完成");
                 //保存配置文件
                 ApkUtil.writeFile(JSONObject.toJSONString(config), new File("config.json"));
+                ToastUtil.toast("创建完成");
             } else {
                 ToastUtil.toast("请先点击->1.获取包信息");
             }
@@ -227,6 +229,8 @@ public class HelloApplication extends Application {
         Button button = new Button();
         button.setMinHeight(30);
         button.setMinWidth(100);
+        button.setTextFill(Color.WHITE);
+        button.setBackground(new Background(new BackgroundFill(Color.GREEN, new CornerRadii(8), null)));
         button.setText("1.获取包信息(旧包空则不生成差分包),结果看下面提示");
         Separator separator0 = new Separator(); // 默认是水平分隔符
         separator0.setOrientation(Orientation.VERTICAL);
@@ -339,8 +343,11 @@ public class HelloApplication extends Application {
         root.setPadding(new Insets(10, 20, 10, 20));
 
         root.getChildren().add(dragTarget);
-
-        Scene scene = new Scene(root, 500, 650);
+        //滚动布局包裹
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setContent(root);
+        scrollPane.setFitToWidth(true); // 不显示横向滚动条
+        Scene scene = new Scene(scrollPane, 600, 700);
 
         primaryStage.setTitle("制作apk差分包");
         primaryStage.setScene(scene);
@@ -384,9 +391,10 @@ public class HelloApplication extends Application {
             //如果你想获取到执行完后的信息，那么下面的代码也是需要的
             String line = "";
             BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            info.setText("");
             while ((line = br.readLine()) != null) {
                 System.out.println(line);
-                info.setText("\n" + line);//info.getText() +
+                info.setText("\n" + info.getText() + line);
             }
         } catch (IOException e) {
             e.printStackTrace();
