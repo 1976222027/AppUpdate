@@ -5,9 +5,11 @@
 用于生成补丁的俩包要用一个渠道的包，对于美团多渠道，这样补丁不会影响渠道信息，原来是啥渠道，补丁合成新包后还是啥渠道，随旧包。
 
 使用：
-[下载release](https://github.com/1976222027/AppUpdate/releases) 
+[github下载release](https://github.com/1976222027/AppUpdate/releases) 
+[gitee下载release](https://gitee.com/mahongyin/AppUpdate/releases) 
 
-配合[客户端](https://github.com/1976222027/HYAppUpdate)使用
+配合[客户端github](https://github.com/1976222027/HYAppUpdate)使用
+配合[客户端gitee](https://gitee.com/mahongyin/HYAppUpdate)使用
 运行脚本
 
 ```shell
@@ -20,6 +22,7 @@ java -jar appupdate-1.0-all.jar
 不需要保留cmd窗口看日志的话运行下面这个
 javaw -jar appupdate-1.0-all.jar
 ```
+如果不需要生成差分包不传旧包即可。
 完成过后，拷走out/dits文件夹放到服务端使用即可
 
 ### ---------------------------------------------------------------------------------------------------------------------------------------

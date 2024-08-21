@@ -26,7 +26,12 @@ public class UpdateInfo {
     private int apkSize;
     private String apkUrl;
     private String apkHash;
-    private Map<String, PatchBean> patchInfo;
+
+    private Map<String, PatchBean> patchInfo;// = new HashMap<>();//不给默认值的话 fastjson转json后是null
+
+    public UpdateInfo(){
+        patchInfo = new HashMap<>();//或者在构造给之
+    }
 
     public int getMinVersion() {
         return minVersion;
@@ -94,6 +99,10 @@ public class UpdateInfo {
 
     public Map<String, PatchBean> getPatchInfo() {
         return patchInfo;
+    }
+
+    public void setPatchInfo(Map<String, PatchBean> patchInfo) {
+        this.patchInfo = patchInfo;
     }
 
     public void addPatch(String versionName, PatchBean patch) {

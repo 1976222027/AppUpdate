@@ -15,8 +15,8 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class HelloApplication extends Application {
@@ -35,8 +36,8 @@ public class HelloApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        File dits = new File("out/dits");
-        if (!dits.exists()){
+        File dits = new File("out/dits/apkInfo");
+        if (!dits.exists()) {
             dits.mkdirs();
         }
         String configJson = ApkUtil.readFile(new File("config.json"));
@@ -58,7 +59,7 @@ public class HelloApplication extends Application {
     private static String upApkUrl = "";
     private static String upPatchUrl = "";
 
-    public static void dragFile(Stage primaryStage) throws IOException {
+    public static void dragFile(Stage primaryStage) {
         Label label = new Label("拖拽新版本apk到这里");
         TextField textFieldNew = new TextField();
         textFieldNew.setMinHeight(40);
@@ -76,7 +77,7 @@ public class HelloApplication extends Application {
             try {
                 textFieldNew.setText(chooser.showOpenDialog(primaryStage).getAbsolutePath());
                 //chooser.showOpenDialog(stage)得到File对象
-            } catch (NullPointerException ex) {
+            } catch (Exception ex) {
             }
 
         });
@@ -99,11 +100,13 @@ public class HelloApplication extends Application {
             try {
                 textFieldOld.setText(chooser2.showOpenDialog(primaryStage).getAbsolutePath());
                 //chooser.showOpenDialog(stage)得到File对象
-            } catch (NullPointerException ex) {
+            } catch (Exception ex) {
             }
 
         });
         Label info = new Label();
+        info.setTextFill(Color.MAGENTA);
+        info.setBorder(new Border(new BorderStroke(Color.GREEN, BorderStrokeStyle.SOLID, new CornerRadii(5), new BorderWidths(2))));
         info.setMaxWidth(480);
         info.setWrapText(true);
         // 创建一个垂直布局容器
@@ -124,10 +127,10 @@ public class HelloApplication extends Application {
         //允许自动换行
         textField2.setWrapText(true);
         //初始化设置行数
-        textField2.setPrefRowCount(2);
+        textField2.setPrefRowCount(3);
         //设置宽高
         textField2.setPrefWidth(480);
-        textField2.setPrefHeight(60);
+        textField2.setPrefHeight(70);
         upMessage = config.getString("message");
         if (upMessage != null && !upMessage.isEmpty()) {
             textField2.setText(upMessage);
@@ -135,11 +138,13 @@ public class HelloApplication extends Application {
         upMinVersion = config.getIntValue("minVersion", 0);
         TextField textField3 = new TextField();//0不强制升级
         textField3.setText(String.valueOf(upMinVersion));
-        TextField textField4 = new TextField();
+        TextArea textField4 = new TextArea();
+        textField4.setPrefRowCount(2);
         upApkUrl = config.getString("apkUrl");
         textField4.setText(upApkUrl);
         upPatchUrl = config.getString("patchUrl");
-        TextField textField5 = new TextField();
+        TextArea textField5 = new TextArea();
+        textField5.setPrefRowCount(2);
         textField5.setText(upPatchUrl);
         Button update = new Button("2.创建升级清单文件");
         Separator separator2 = new Separator(); // 默认是水平分隔符
@@ -152,7 +157,7 @@ public class HelloApplication extends Application {
                 textField1,
                 new Label("更新内容，【空格表示换行】"),
                 textField2,
-                new Label("低于[int]强制升级,0不强制"),
+                new Label("低于该值[versionCode]的版本要强制升级,0不强制"),
                 textField3,
                 new Label("全量更新包地址"),
                 textField4,
@@ -161,67 +166,73 @@ public class HelloApplication extends Application {
                 separator2,
                 update
         );
-        update.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (newVersionName != null && !newVersionName.isEmpty()) {
-                    ToastUtil.toast("开始创建");
-                    upTitle = textField1.getText();
-                    upMessage = textField2.getText();
-                    upMinVersion = Integer.parseInt(Optional.ofNullable(textField3.getText()).orElse("0"));
-                    upApkUrl = textField4.getText();
-                    upPatchUrl = textField5.getText();
-                    config.put("title", upTitle);
-                    config.put("message", upMessage);
-                    config.put("minVersion", upMinVersion);
-                    config.put("apkUrl", upApkUrl);
-                    config.put("patchUrl", upPatchUrl);
-                    String newMeta = ApkUtil.readFile(new File("out/dits/" + newVersionName + "_apkInfo.json"));
-                    ApkMeta apkMeta = JSONObject.parseObject(newMeta, ApkMeta.class);
-                    UpdateInfo updateInfo = new UpdateInfo();
-                    updateInfo.setNewVersionCode(Math.toIntExact(Optional.ofNullable(apkMeta.getVersionCode()).orElse(0L)));//int
-                    updateInfo.setNewVersionName(apkMeta.getVersionName());
-                    updateInfo.setApkSize(Integer.parseInt(apkMeta.getTargetSdkVersion())); //size
-                    updateInfo.setApkHash(apkMeta.getInstallLocation());//md5
-                    updateInfo.setTitle(upTitle);
-                    updateInfo.setMessage(upMessage);
-                    updateInfo.setMinVersion(upMinVersion);//低于此版 强制更新
-                    updateInfo.setApkUrl(upApkUrl);
-                    File[] listFiles = new File("out/dits/" + newVersionName).listFiles();
-                    if (listFiles != null && listFiles.length > 0) {
-                        for (File listFile : listFiles) {
-                            String patchName = listFile.getName();
-                            if (patchName.endsWith(".patch")) {//升新版补丁文件
-                                String oldVersion = patchName.split("_")[0];
-                                System.out.println("file:" + patchName);
-                                long size = ApkUtil.getFileSize(listFile);
-                                UpdateInfo.PatchBean bean = new UpdateInfo.PatchBean();
-                                bean.setPatchHash(ApkUtil.getFileMD5(listFile));
-                                String oldJson = ApkUtil.readFile(new File("out/dits/" + oldVersion + "_apkInfo.json"));
-                                ApkMeta oldMeta = JSONObject.parseObject(oldJson, ApkMeta.class);
-                                bean.setOldHash(oldMeta.getInstallLocation());//md5
-                                bean.setApkHash(apkMeta.getInstallLocation());//md5
-                                bean.setPatchSize(Math.toIntExact(size));
-                                //相对路径 相对updateVersion.json文件的地址
-                                bean.setPatchUrl(upPatchUrl + "/" + listFile.getName());
-                                //文件夹下有文件
-                                updateInfo.addPatch(oldVersion, bean);
-                            }
+        update.setOnMouseClicked(event -> {
+            if (newVersionName != null && !newVersionName.isEmpty()) {
+                ToastUtil.toast("开始创建升级清单文件");
+                upTitle = textField1.getText();
+                upMessage = textField2.getText();
+                upMinVersion = Integer.parseInt(Optional.ofNullable(textField3.getText()).orElse("0"));
+                upApkUrl = textField4.getText();
+                upPatchUrl = textField5.getText();
+                config.put("title", upTitle);
+                config.put("message", upMessage);
+                config.put("minVersion", upMinVersion);
+                config.put("apkUrl", upApkUrl);
+                config.put("patchUrl", upPatchUrl);
+                //保存新版apk信息
+                String newMeta = ApkUtil.readFile(new File("out/dits/apkInfo/" + newVersionName + "_apkInfo.json"));
+                ApkMeta apkMeta = JSONObject.parseObject(newMeta, ApkMeta.class);
+                UpdateInfo updateInfo = new UpdateInfo();
+                updateInfo.setNewVersionCode(Math.toIntExact(Optional.ofNullable(apkMeta.getVersionCode()).orElse(0L)));//int
+                updateInfo.setNewVersionName(apkMeta.getVersionName());
+                updateInfo.setApkSize(Integer.parseInt(apkMeta.getTargetSdkVersion())); //size
+                updateInfo.setApkHash(apkMeta.getInstallLocation());//md5
+                updateInfo.setTitle(upTitle);
+                updateInfo.setMessage(upMessage);
+                updateInfo.setMinVersion(upMinVersion);//低于此版 强制更新
+                updateInfo.setApkUrl(upApkUrl);
+                File[] listFiles = new File("out/dits/" + newVersionName).listFiles();
+                //目录下有差分补丁包吗
+                if (listFiles != null && listFiles.length > 0) {
+                    if (!upPatchUrl.endsWith("/")) {
+                        upPatchUrl = upPatchUrl + "/";
+                    }
+                    for (File listFile : listFiles) {
+                        String patchName = listFile.getName();
+                        if (listFile.isFile() && patchName.endsWith(".patch")) {//升新版补丁文件
+                            String oldVersion = patchName.split("_")[0];
+                            System.out.println("file:" + patchName);
+                            long size = ApkUtil.getFileSize(listFile);
+                            UpdateInfo.PatchBean bean = new UpdateInfo.PatchBean();
+                            bean.setPatchHash(ApkUtil.getFileMD5(listFile));
+                            //保存旧版apk信息
+                            String oldJson = ApkUtil.readFile(new File("out/dits/apkInfo/" + oldVersion + "_apkInfo.json"));
+                            ApkMeta oldMeta = JSONObject.parseObject(oldJson, ApkMeta.class);
+                            bean.setOldHash(oldMeta.getInstallLocation());//md5
+                            bean.setApkHash(apkMeta.getInstallLocation());//md5
+                            bean.setPatchSize(Math.toIntExact(size));
+                            //相对路径 相对updateVersion.json文件的地址
+                            bean.setPatchUrl(upPatchUrl + listFile.getName());
+                            //文件夹下有文件
+                            updateInfo.addPatch(oldVersion, bean);
                         }
                     }
-                    JsonUtil.createJsonFile(updateInfo, "out/dits/" + newVersionName + "/updateVersion.json");
-                    ToastUtil.toast("创建完成");
-                    ApkUtil.writeFile(JSONObject.toJSONString(config), new File("config.json"));
-                } else {
-                    ToastUtil.toast("请先选择新版包->生成差分包");
+                } else {//给个空对象
+                    updateInfo.setPatchInfo(Map.of());//java9不可变map // new HashMap<>(););
                 }
+                JsonUtil.createJsonFile(updateInfo, "out/dits/" + newVersionName + "/updateVersion.json");
+                ToastUtil.toast("创建完成");
+                //保存配置文件
+                ApkUtil.writeFile(JSONObject.toJSONString(config), new File("config.json"));
+            } else {
+                ToastUtil.toast("请先点击->1.获取包信息");
             }
         });
         VBox vBox = new VBox(5);
         Button button = new Button();
         button.setMinHeight(30);
         button.setMinWidth(100);
-        button.setText("1.生成差分包(旧包空则不生成差分包) 出现out diff file ok!才是成功");
+        button.setText("1.获取包信息(旧包空则不生成差分包),结果看下面提示");
         Separator separator0 = new Separator(); // 默认是水平分隔符
         separator0.setOrientation(Orientation.VERTICAL);
         vBox.getChildren().addAll(separator0, button, info, vbox);
@@ -237,106 +248,97 @@ public class HelloApplication extends Application {
                 event.consume();
             }
         });
-        textFieldNew.setOnDragDropped(new EventHandler<DragEvent>() {
-            @Override
-            public void handle(DragEvent event) {
-                Dragboard db = event.getDragboard();
-                boolean success = false;
-                if (db.hasFiles()) {
-                    List<File> files = db.getFiles();
-                    for (File file : files) {
-                        textFieldNew.setText(file.getAbsolutePath());
-                    }
-                    success = true;
+        textFieldNew.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            boolean success = false;
+            if (db.hasFiles()) {
+                List<File> files = db.getFiles();
+                for (File file : files) {
+                    textFieldNew.setText(file.getAbsolutePath());
                 }
-                event.setDropCompleted(success);
-                event.consume();
+                success = true;
             }
+            event.setDropCompleted(success);
+            event.consume();
         });
         //使用 DragEvent 事件处理器 可以在输入框的事件处理器中使用
-        textFieldOld.setOnDragOver(new EventHandler<DragEvent>() {
-            @Override
-            public void handle(DragEvent event) {
-                if (event.getGestureSource() != dragTarget && event.getDragboard().hasFiles()) {
-                    event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
-                }
-                event.consume();
+        textFieldOld.setOnDragOver(event -> {
+            if (event.getGestureSource() != dragTarget && event.getDragboard().hasFiles()) {
+                event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
             }
+            event.consume();
         });
 
-        textFieldOld.setOnDragDropped(new EventHandler<DragEvent>() {
-            @Override
-            public void handle(DragEvent event) {
-                Dragboard db = event.getDragboard();
-                boolean success = false;
-                if (db.hasFiles()) {
-                    List<File> files = db.getFiles();
-                    for (File file : files) {
-                        textFieldOld.setText(file.getAbsolutePath());
-                    }
-                    success = true;
+        textFieldOld.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            boolean success = false;
+            if (db.hasFiles()) {
+                List<File> files = db.getFiles();
+                for (File file : files) {
+                    textFieldOld.setText(file.getAbsolutePath());
                 }
-                event.setDropCompleted(success);
-                event.consume();
+                success = true;
             }
+            event.setDropCompleted(success);
+            event.consume();
         });
 
         StackPane root = new StackPane();
-        //不制作差分包 不填旧包即可，也点一下生成差分包，用于产出md5
-        button.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (textFieldNew.getText() != null && !textFieldNew.getText().isEmpty()) {
-                    config.put("newApkPath", textFieldNew.getText());
-                    ToastUtil.toast("生成补丁ing,请稍等");
-                    ProgressFrom progress = new ProgressFrom(primaryStage);
-                    progress.activateProgressBar();
+        //生成差分包按钮，不制作差分包 不填旧包即可，但也要点一下生成差分包，用于产出新包md5
+        button.setOnMouseClicked(event -> {
+            if (textFieldNew.getText() != null && !textFieldNew.getText().isEmpty()) {
+                config.put("newApkPath", textFieldNew.getText());
+                ToastUtil.toast("获取ing,请稍等");
+                ProgressFrom progress = new ProgressFrom(primaryStage);
+                progress.activateProgressBar();
 
-                    ApkMeta apkMetaNew = ApkUtil.getApkInfo(textFieldNew.getText());
-                    if (apkMetaNew != null) {
-                        //String newMd5 = ApkUtil.getFileMD5(textFieldNew.getText());
-                        newVersionName = apkMetaNew.getVersionName();
-                        //制作补丁时把旧版md5拿来保存到产出目录
-                        String jsonNew = JSONObject.toJSONString(apkMetaNew);
-                        ApkUtil.writeFile(jsonNew, new File("out/dits/" + newVersionName + "_apkInfo.json"));
-
-                        List<String> cmd = new ArrayList<>();
-                        //创建一个补丁
-                        cmd.add(getCmdByOSName());
-                        cmd.add("-m-6");
-                        cmd.add("-SD");
-                        cmd.add("-c-zstd-21-24");
-                        cmd.add("-d");
-                        cmd.add(textFieldOld.getText());//旧版本
-                        cmd.add(textFieldNew.getText());//新版本
-                        if (textFieldOld.getText() != null && !textFieldOld.getText().isEmpty()) {
-                            config.put("oldApkPath", textFieldOld.getText());
-                            ApkMeta apkMetaOld = ApkUtil.getApkInfo(textFieldOld.getText());
-                            if (apkMetaOld != null) {
-                                String oldVersionName = apkMetaOld.getVersionName();
-                                //制作补丁时把旧版md5拿来保存到产出目录
-                                //String oldApkMd5 = ApkUtil.getFileMD5(textFieldOld.getText());
-                                String jsonOld = JSONObject.toJSONString(apkMetaOld);
-                                ApkUtil.writeFile(jsonOld, new File("out/dits/" + oldVersionName + "_apkInfo.json"));
-                                //输出差分包路径 out/dits/3.9.4/3.9.2_3.9.4_apk.patch
-                                File newVer = new File("out/dits/" + newVersionName);
-                                if (!newVer.exists()){
-                                    newVer.mkdirs();
-                                }
-                                cmd.add("out/dits/" + newVersionName + "/" + oldVersionName + "_" + newVersionName + "_apk.patch");//差分包名称
-                                commandStart(cmd, info, progress);
-                            }
-                        } else {
-                            progress.cancelProgressBar();
-//                    new Alert(Alert.AlertType.ERROR, "FFmpeg.exe Not Found.").show();
-//                    new Alert(Alert.AlertType.INFORMATION, "没有转码任务，请选择视频进行转码。").show();
+                ApkMeta apkMetaNew = ApkUtil.getApkInfo(textFieldNew.getText());
+                if (apkMetaNew != null) {
+                    //String newMd5 = ApkUtil.getFileMD5(textFieldNew.getText());
+                    //拿到新版本号
+                    newVersionName = apkMetaNew.getVersionName();
+                    String jsonNew = JSONObject.toJSONString(apkMetaNew);
+                    //保存新版apk信息
+                    ApkUtil.writeFile(jsonNew, new File("out/dits/apkInfo/" + newVersionName + "_apkInfo.json"));
+                    //创建新版本升级目录 输出差分包路径 out/dits/3.9.4/3.9.2_3.9.4_apk.patch
+                    File newVer = new File("out/dits/" + newVersionName);
+                    if (!newVer.exists()) {
+                        newVer.mkdirs();
+                    }
+                    if (textFieldOld.getText() != null && !textFieldOld.getText().isEmpty()) {
+                        config.put("oldApkPath", textFieldOld.getText());
+                        ApkMeta apkMetaOld = ApkUtil.getApkInfo(textFieldOld.getText());
+                        if (apkMetaOld != null) {
+                            String oldVersionName = apkMetaOld.getVersionName();
+                            //制作补丁时旧版md5已保存
+                            //String oldApkMd5 = ApkUtil.getFileMD5(textFieldOld.getText());
+                            String jsonOld = JSONObject.toJSONString(apkMetaOld);
+                            //保存旧版apk信息
+                            ApkUtil.writeFile(jsonOld, new File("out/dits/apkInfo/" + oldVersionName + "_apkInfo.json"));
+                            //制作差分包命令
+                            List<String> cmd = new ArrayList<>();
+                            //创建一个补丁
+                            cmd.add(getCmdByOSName());
+                            cmd.add("-m-6");
+                            cmd.add("-SD");
+                            cmd.add("-c-zstd-21-24");
+                            cmd.add("-d");
+                            cmd.add(textFieldOld.getText());//旧版本
+                            cmd.add(textFieldNew.getText());//新版本
+                            cmd.add("out/dits/" + newVersionName + "/" + oldVersionName + "_" + newVersionName + "_apk.patch");//差分包名称
+                            commandStart(cmd, info, progress);
                         }
                     } else {
-                        ToastUtil.toast("获取apk信息失败，请重试");
+                        info.setText("out file ok!");
+                        progress.cancelProgressBar();
+//                    new Alert(Alert.AlertType.ERROR, "FFmpeg.exe Not Found.").show();
+//                    new Alert(Alert.AlertType.INFORMATION, "没有转码任务，请选择视频进行转码。").show();
                     }
                 } else {
-                    ToastUtil.toast("包路径空，请正确选择apk文件");
+                    ToastUtil.toast("获取apk信息失败，请重试");
                 }
+            } else {
+                ToastUtil.toast("包路径空，请正确选择apk文件");
             }
         });
         root.setPadding(new Insets(10, 20, 10, 20));
@@ -391,12 +393,12 @@ public class HelloApplication extends Application {
                 System.out.println(line);
                 info.setText("\n" + line);//info.getText() +
             }
-            ToastUtil.toast("补丁生成完成");
         } catch (IOException e) {
             e.printStackTrace();
             info.setText(e.toString());
         } finally {
             progress.cancelProgressBar();
+            ToastUtil.toast("完成");
         }
     }
 

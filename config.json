@@ -1,10 +1,1 @@
-{
-  "字段配置解释": "1.message空格用作分割换行；2.minVersion:值是versionCode,低于此值强制升级，0不强制；3.patchUrl:补丁包地址，不包括最后节点文件名",
-  "newApkPath": "D:\\out\\394.apk",
-  "oldApkPath": "D:\\out\\393.apk",
-  "title": "版本升级",
-  "message": "央视体育客户端巴黎奥运会版本上线啦！1、奥运会全量直播  2、有趣的直播间玩法：弹幕、三分屏、小窗播放、多路直播，互动不停！3、礼物雨来袭 一起嗨 4、项目资讯，精准传递  5、丰富的赛事数据",
-  "minVersion": 0,
-  "apkUrl": "https://update/app/update.apk",
-  "patchUrl": "https://update/patch"
-}
+{"字段配置解释":"1.message空格用作分割换行；2.minVersion:值是versionCode,低于此值强制升级，0不强制；3.patchUrl:补丁包地址，不包括最后节点文件名","newApkPath":"D:\\out\\394.apk","oldApkPath":"D:\\out\\393.apk","title":"版本升级","message":"央视体育客户端巴黎奥运会版本上线啦！1、奥运会全量直播  2、有趣的直播间玩法：弹幕、三分屏、小窗播放、多路直播，互动不停！3、礼物雨来袭 一起嗨 4、项目资讯，精准传递  5、丰富的赛事数据","minVersion":0,"apkUrl":"https://host/update/app/update.apk","patchUrl":"https://host/update/app补丁目录名"}

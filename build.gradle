@@ -53,8 +53,12 @@ dependencies {
 task sources2Jar(type: Copy, dependsOn: ['shadowJar']) {
     from('build/libs/')
     into('out/libs')
-    from('config.json')
-    into('out/libs')
+    File config = new File("config.json")
+    if (!config.exists()) {
+        //已存在就不拷贝了
+        from('config.json')
+        into('out/libs')
+    }
     File[] listFiles = new File('out/libs/diff').listFiles();
     if (listFiles != null && listFiles.length > 0) {
         //文件夹下有文件
