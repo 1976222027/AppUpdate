@@ -13,17 +13,18 @@
 运行脚本
 
 ```shell
-Windows双击: start.bat
+Windows双击: WinStart.bat
 Mac: ./MacStart.sh
 ```
 或命令行 
 ```shell
-java -jar appupdate-1.0-all.jar
+java -jar appupdate-1.1-all.jar
 不需要保留cmd窗口看日志的话运行下面这个
-javaw -jar appupdate-1.0-all.jar
+javaw -jar appupdate-1.1-all.jar
 ```
 如果不需要生成差分包不传旧包即可。
-完成过后，拷走out/dits文件夹放到服务端使用即可
+完成过后，拷走out/应用文件夹放到服务端使用即可
+补丁包的名字不要改，改的升级文件也要一致。
 
 ### ---------------------------------------------------------------------------------------------------------------------------------------
 ```json
@@ -59,7 +60,7 @@ javaw -jar appupdate-1.0-all.jar
 //# 获取当前执行脚本的目录
 //set jarPath=%~dp0
 //# 使用 javaw 启动一个jar
-//start javaw -jar %jarPath%appupdate-1.0-all.jar
+//start javaw -jar %jarPath%appupdate-1.1-all.jar
 
 
 差异库用的这个

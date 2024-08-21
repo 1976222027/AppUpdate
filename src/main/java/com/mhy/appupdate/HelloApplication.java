@@ -33,10 +33,10 @@ public class HelloApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        File dits = new File("out/dits/apkInfo");
-        if (!dits.exists()) {
-            dits.mkdirs();
-        }
+//        File dits = new File("out/dits/apkInfo");
+//        if (!dits.exists()) {
+//            dits.mkdirs();
+//        }
         String configJson = ApkUtil.readFile(new File("config.json"));
         config = JSONObject.parseObject(configJson);
         if (config == null) {
@@ -50,6 +50,7 @@ public class HelloApplication extends Application {
     }
 
     private static String newVersionName = "";
+    private static String newAppName = "";
     private static String upTitle = "";
     private static String upMessage = "";
     private static int upMinVersion = 0;
@@ -145,7 +146,7 @@ public class HelloApplication extends Application {
         textField5.setText(upPatchUrl);
         Button update = new Button("2.创建升级清单文件");
         update.setTextFill(Color.WHITE);
-        update.setBackground(new Background(new BackgroundFill(Color.GREEN,  new CornerRadii(8), null)));
+        update.setBackground(new Background(new BackgroundFill(Color.GREEN, new CornerRadii(8), null)));
         Separator separator2 = new Separator(); // 默认是水平分隔符
         separator2.setOrientation(Orientation.VERTICAL);
         update.setMinHeight(30);
@@ -165,6 +166,7 @@ public class HelloApplication extends Application {
                 separator2,
                 update
         );
+        //创建清单按钮
         update.setOnMouseClicked(event -> {
             if (newVersionName != null && !newVersionName.isEmpty()) {
                 ToastUtil.toast("开始创建升级清单文件");
@@ -178,8 +180,9 @@ public class HelloApplication extends Application {
                 config.put("minVersion", upMinVersion);
                 config.put("apkUrl", upApkUrl);
                 config.put("patchUrl", upPatchUrl);
-                //保存新版apk信息
-                String newMeta = ApkUtil.readFile(new File("out/dits/apkInfo/" + newVersionName + "_apkInfo.json"));
+                //取保存新版apk的信息
+//                String newMeta = ApkUtil.readFile(new File("out/dits/apkInfo/" + newVersionName + "_apkInfo.json"));
+                String newMeta = ApkUtil.readFile(new File("out/" + newAppName + "/apkInfo/" + newVersionName + "_apkInfo.json"));
                 ApkMeta apkMeta = JSONObject.parseObject(newMeta, ApkMeta.class);
                 UpdateInfo updateInfo = new UpdateInfo();
                 updateInfo.setNewVersionCode(Math.toIntExact(Optional.ofNullable(apkMeta.getVersionCode()).orElse(0L)));//int
@@ -190,7 +193,8 @@ public class HelloApplication extends Application {
                 updateInfo.setMessage(upMessage);
                 updateInfo.setMinVersion(upMinVersion);//低于此版 强制更新
                 updateInfo.setApkUrl(upApkUrl);
-                File[] listFiles = new File("out/dits/" + newVersionName).listFiles();
+//                File[] listFiles = new File("out/dits/" + newVersionName).listFiles();
+                File[] listFiles = new File("out/" + newAppName + "/" + newVersionName).listFiles();
                 //目录下有差分补丁包吗
                 if (listFiles != null && listFiles.length > 0) {
                     if (!upPatchUrl.endsWith("/")) {
@@ -205,7 +209,8 @@ public class HelloApplication extends Application {
                             UpdateInfo.PatchBean bean = new UpdateInfo.PatchBean();
                             bean.setPatchHash(ApkUtil.getFileMD5(listFile));
                             //保存旧版apk信息
-                            String oldJson = ApkUtil.readFile(new File("out/dits/apkInfo/" + oldVersion + "_apkInfo.json"));
+//                            String oldJson = ApkUtil.readFile(new File("out/dits/apkInfo/" + oldVersion + "_apkInfo.json"));
+                            String oldJson = ApkUtil.readFile(new File("out/" + newAppName + "/apkInfo/" + oldVersion + "_apkInfo.json"));
                             ApkMeta oldMeta = JSONObject.parseObject(oldJson, ApkMeta.class);
                             bean.setOldHash(oldMeta.getInstallLocation());//md5
                             bean.setApkHash(apkMeta.getInstallLocation());//md5
@@ -217,7 +222,8 @@ public class HelloApplication extends Application {
                         }
                     }
                 }
-                JsonUtil.createJsonFile(updateInfo, "out/dits/" + newVersionName + "/updateVersion.json");
+//                JsonUtil.createJsonFile(updateInfo, "out/dits/" + newVersionName + "/updateVersion.json");
+                JsonUtil.createJsonFile(updateInfo, "out/" + newAppName + "/" + newVersionName + "/updateVersion.json");
                 //保存配置文件
                 ApkUtil.writeFile(JSONObject.toJSONString(config), new File("config.json"));
                 ToastUtil.toast("创建完成");
@@ -296,11 +302,19 @@ public class HelloApplication extends Application {
                     //String newMd5 = ApkUtil.getFileMD5(textFieldNew.getText());
                     //拿到新版本号
                     newVersionName = apkMetaNew.getVersionName();
+                    newAppName = apkMetaNew.getName();//app名
+                    //应用名作为目录
+                    File dits = new File("out/" + newAppName + "/apkInfo");
+                    if (!dits.exists()) {
+                        dits.mkdirs();
+                    }
                     String jsonNew = JSONObject.toJSONString(apkMetaNew);
                     //保存新版apk信息
-                    ApkUtil.writeFile(jsonNew, new File("out/dits/apkInfo/" + newVersionName + "_apkInfo.json"));
+//                    ApkUtil.writeFile(jsonNew, new File("out/dits/apkInfo/" + newVersionName + "_apkInfo.json"));
+                    ApkUtil.writeFile(jsonNew, new File(dits, newVersionName + "_apkInfo.json"));
                     //创建新版本升级目录 输出差分包路径 out/dits/3.9.4/3.9.2_3.9.4_apk.patch
-                    File newVer = new File("out/dits/" + newVersionName);
+//                    File newVer = new File("out/dits/" + newVersionName);
+                    File newVer = new File("out/" + newAppName + "/" + newVersionName);
                     if (!newVer.exists()) {
                         newVer.mkdirs();
                     }
@@ -313,7 +327,8 @@ public class HelloApplication extends Application {
                             //String oldApkMd5 = ApkUtil.getFileMD5(textFieldOld.getText());
                             String jsonOld = JSONObject.toJSONString(apkMetaOld);
                             //保存旧版apk信息
-                            ApkUtil.writeFile(jsonOld, new File("out/dits/apkInfo/" + oldVersionName + "_apkInfo.json"));
+//                            ApkUtil.writeFile(jsonOld, new File("out/dits/apkInfo/" + oldVersionName + "_apkInfo.json"));
+                            ApkUtil.writeFile(jsonOld, new File("out/" + newAppName + "/apkInfo/" + oldVersionName + "_apkInfo.json"));
                             //制作差分包命令
                             List<String> cmd = new ArrayList<>();
                             //创建一个补丁
@@ -324,7 +339,8 @@ public class HelloApplication extends Application {
                             cmd.add("-d");
                             cmd.add(textFieldOld.getText());//旧版本
                             cmd.add(textFieldNew.getText());//新版本
-                            cmd.add("out/dits/" + newVersionName + "/" + oldVersionName + "_" + newVersionName + "_apk.patch");//差分包名称
+//                            cmd.add("out/dits/" + newVersionName + "/" + oldVersionName + "_" + newVersionName + "_apk.patch");//差分包名称
+                            cmd.add("out/" + newAppName + "/" + newVersionName + "/" + oldVersionName + "_" + newVersionName + "_apk.patch");//差分包名称
                             commandStart(cmd, info, progress);
                         }
                     } else {
@@ -391,10 +407,11 @@ public class HelloApplication extends Application {
             //如果你想获取到执行完后的信息，那么下面的代码也是需要的
             String line = "";
             BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            info.setText("");
+            info.setText("请等待完成");
             while ((line = br.readLine()) != null) {
+                info.setText("");
                 System.out.println(line);
-                info.setText("\n" + info.getText() + line);
+                info.setText("" + info.getText().trim() + line);
             }
         } catch (IOException e) {
             e.printStackTrace();
