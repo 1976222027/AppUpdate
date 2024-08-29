@@ -127,6 +127,7 @@ task clearOut(type: Delete) {
 //打完压缩包可以删除libs了
 task clearLib(type: Delete) {
     delete('out/libs')
+//    delete('out/'+rootProject.name)
 }
 
 //压缩文件
@@ -137,6 +138,29 @@ task compressToZip(type: Zip, dependsOn: ['clearOut']) {
     destinationDir = file('out')
     // 添加要压缩的文件或目录
     from 'out/libs'
+}
+
+task execTask() {
+    def mainJar = rootProject.name + '-' + mVersion + '-all.jar'
+    def cmd = "jpackage --type app-image --name " + rootProject.name + " --input out/libs --main-jar " + mainJar + " --win-console --dest out"
+    def cmdMac = "jpackage --name " + rootProject.name + " --input out/libs --main-jar " + mainJar + " --dest out"
+//    def commandLine = 'jpackage --name' + rootProject.name + ' --input ./out/libs --main-class com.mhy.appupdate.JavaFXBootstrap --output ./out --windows-shortcut'
+    println("first run :" + cmd)
+}
+// 确保编译和测试通过后再执行打包
+//execTask.mustRunAfter 'sources2Jar'
+//打包exe
+task compressExeToZip(type: Zip, dependsOn: ['execTask']) {
+    if (file("'out/' + rootProject.name").exists()) {
+        // 指定输出ZIP文件的名称
+        archiveFileName = rootProject.name + '-Win-' + mVersion + '.zip'
+        // 指定ZIP文件存放的目录
+        destinationDir = file('out')
+        // 添加要压缩的文件或目录
+        from 'out/' + rootProject.name
+    } else {
+        println("first run :execTask")
+    }
 }
 /**这个命令全包了
  * 将编译包导出，发布
@@ -151,14 +175,12 @@ task sources2Jar(type: Copy, dependsOn: ['shadowJar', 'createTextFile']) {
         into('out/libs')
     }
     File[] listFiles = new File('out/libs/diff').listFiles();
-    if (listFiles != null && listFiles.length > 0) {
-        //文件夹下有文件
-    } else {
+    if (listFiles == null || listFiles.length == 0) {
         //文件夹下没有文件
         println '复制diff'
         from('diff')
         into('out/libs/diff')
     }
 }
-//执行完自动执行下一个打压缩包
-sources2Jar.finalizedBy(compressToZip, clearLib)
+//执行完自动执行: 打压缩包,打完压缩包删除lib
+//sources2Jar.finalizedBy(compressExeToZip, compressToZip, clearLib)

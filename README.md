@@ -27,8 +27,23 @@ javaw -jar appupdate-1.1-all.jar
 如果不需要生成差分包不传旧包即可。
 完成过后，拷走out/应用文件夹放到服务端使用即可
 补丁包的名字不要改，改的升级文件也要一致。
+打包可执行程序
+Win:
+jpackage --type app-image --name appupdate --input out/libs --main-jar appupdate-1.1-all.jar --win-console --dest out
+Mac/Linux :
+jpackage --name appupdate --input out/libs --main-jar appupdate-1.1-all.jar --dest out
+| 参数              | 作用             | 示例           | 说明                                                         |
+| ----------------- | ---------------- | -------------- | ------------------------------------------------------------ |
+| --type            | 打包类型         | app-image      | 可选："app-image", "exe", "msi"，这里使用app-image，选择另外两个选项需要安装WiX |
+| --name            | 应用名称         | spring         | 打包后的名称，如"sping.exe"                                  |
+| --input           | 输入目录         | target         | 该目录所有文件打包到应用目录中                               |
+| --main-jar        | 应用主jar        | spring-1.0.jar | --input目录里的jar程序                                       |
+| --win-console     | 运行时启动控制台 | --win-console  | 打开应用程序时，打开控制台。如果不启用在后台运行，关闭只能从任务管理器中结束任务 |
+| --dest            | 输出目录         | dist           | 输出到该目录，不要和--input同个目录，否则会无限循环复制目录  |
+| --win-shortcut    |                  |                | 在 Windows 开始菜单中创建快捷方式文件                        |
+| --win-dir-chooser |                  |                | 让最终用户指定自定义目录来安装可执行文件                     |
 
-### ---------------------------------------------------------------------------------------------------------------------------------------
+### -------------------------------------------------------------------------------------------------------
 ```json
 {
   "title": "版本更新",  
@@ -56,8 +71,8 @@ javaw -jar appupdate-1.1-all.jar
     }
   }
 }
-
-```cmd.bat运行脚本
+```
+cmd.bat运行脚本
 //@echo off
 //# 获取当前执行脚本的目录
 //set jarPath=%~dp0
