@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UpdateInfo {
+public class UpdateInfo implements Serializable{
 
     /**
      * minVersion : 3900
@@ -28,6 +28,7 @@ public class UpdateInfo {
     private String apkUrl;
     private String apkHash;
     private boolean enableUpdate;
+    private boolean autoUpdate;
 
     private Map<String, PatchBean> patchInfo;// = new HashMap<>();//不给默认值的话 fastjson转json后是null
 
@@ -99,12 +100,18 @@ public class UpdateInfo {
         this.apkHash = apkHash;
     }
 
-    public boolean getEnableUpdate() {
+    public void setEnableUpdate(boolean enable) {
+        this.enableUpdate = enable;
+    }
+    public boolean isEnableUpdate() {
         return enableUpdate;
     }
 
-    public void setEnableUpdate(boolean enable) {
-        this.enableUpdate = enable;
+    public boolean isAutoUpdate() {
+        return autoUpdate;
+    }
+    public void setAutoUpdate(boolean autoUpdate) {
+        this.autoUpdate = autoUpdate;
     }
 
     public Map<String, PatchBean> getPatchInfo() {

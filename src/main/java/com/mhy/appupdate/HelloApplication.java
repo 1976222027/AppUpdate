@@ -73,6 +73,10 @@ public class HelloApplication extends Application {
     private static String upApkUrl = "";
     private static String upPatchUrl = "";
     private static Boolean enableUpdate = null;
+    /**
+     * 静默更新，后台自动下载
+     */
+    private static Boolean autoUpdate = null;
 
     public static void dragFile(Stage primaryStage) {
         Label label = new Label("拖拽新版本apk到这里 或 ");
@@ -137,15 +141,27 @@ public class HelloApplication extends Application {
         if (enableUpdate == null) {
             enableUpdate = true;
         }
+        autoUpdate = config.getBoolean("autoUpdate");
+        if (autoUpdate == null) {
+            autoUpdate = false;
+        }
         TextArea textField5 = new TextArea();
         textField5.setPrefRowCount(2);
         textField5.setText(upPatchUrl);
+        HBox chbox = new HBox();
         CheckBox cbox = new CheckBox("启用升级功能");
         cbox.setPadding(new Insets(5));
         cbox.setSelected(enableUpdate);
         cbox.selectedProperty().addListener((obs, oldValue, newValue) -> {
             enableUpdate = newValue;
         });
+        CheckBox cbox2 = new CheckBox("开启静默升级");// 先wifi下载，后提示安装
+        cbox2.setPadding(new Insets(5));
+        cbox2.setSelected(autoUpdate);
+        cbox2.selectedProperty().addListener((obs, oldValue, newValue) -> {
+            autoUpdate = newValue;
+        });
+        chbox.getChildren().addAll(cbox,cbox2);
         Button update = new Button("2.创建升级清单文件");
         update.setTextFill(Color.WHITE);
         update.setBackground(new Background(new BackgroundFill(Color.GREEN, new CornerRadii(8), null)));
@@ -165,7 +181,7 @@ public class HelloApplication extends Application {
                 textField4,
                 new Label("补丁包地址[不包含文件名字],文件名导出是啥就是啥，约定好"),
                 textField5,
-                cbox,
+                chbox,
                 update
         );
         vbox.setPadding(new Insets(10, 0, 0, 0));
@@ -184,6 +200,7 @@ public class HelloApplication extends Application {
                 config.put("apkUrl", upApkUrl);
                 config.put("patchUrl", upPatchUrl);
                 config.put("enableUpdate", enableUpdate);
+                config.put("autoUpdate", autoUpdate);
                 //取保存新版apk的信息
 //                String newMeta = ApkUtil.readFile(new File("out/dits/apkInfo/" + newVersionName + "_apkInfo.json"));
                 String newMeta = ApkUtil.readFile(new File("out/" + newAppName + "/apkInfo/" + newVersionName + "_apkInfo.json"));
@@ -198,6 +215,7 @@ public class HelloApplication extends Application {
                 updateInfo.setMinVersion(upMinVersion);//低于此版 强制更新
                 updateInfo.setApkUrl(upApkUrl);
                 updateInfo.setEnableUpdate(enableUpdate);
+                updateInfo.setAutoUpdate(autoUpdate);
 //                File[] listFiles = new File("out/dits/" + newVersionName).listFiles();
                 File[] listFiles = new File("out/" + newAppName + "/" + newVersionName).listFiles();
                 //目录下有差分补丁包吗

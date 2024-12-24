@@ -53,6 +53,7 @@ jpackage --name appupdate --input out/libs --main-jar appupdate-1.1-all.jar --de
   "apkHash": "ea97c8efa490a2eaf7d10b37e63dab0e", // 最新apk文件的md5值
   "minVersion": 3900, //最小支持版本 低于此数值的本地版本将强制更新, 0不强制，最新版versioncode则全部强制
   "enableUpdate": true, //更新功能总开关，优先级最高, 可以随时设置更能功能是否可用
+  "autoUpdate": false, //开启静默升级 先wifi下载，后提示安装
   "newVersionCode": 3940, // 当前最新版本代码
   "newVersionName": "3.9.4", // 当前最新版本代码
   "patchInfo": {  // 差分包信息,有那个版本，就是有补丁包 ,没有则全量更新
