@@ -112,8 +112,8 @@ task createTextFile(type: DefaultTask) {
 @echo off
 # 获取当前执行脚本的目录
 set jarPath=%~dp0
-# 使用 javaw 启动一个jar
-start java -jar %jarPath%""" + rootProject.name + """-""" + mVersion + """-all.jar
+# 使用 javaw 启动一个jar,不带黑窗
+start javaw -jar %jarPath%""" + rootProject.name + """-""" + mVersion + """-all.jar
 """
         // 指定输出文件的路径
         File outputFile = file("out/libs/WinStart.bat")
@@ -142,8 +142,8 @@ if ! command -v java &>/dev/null; then
   exit
 fi
 
-# 指定 Java 命令
-java -jar """ + rootProject.name + """-""" + mVersion + """-all.jar
+# 指定 Java 命令 使用 javaw 启动一个jar,不带黑窗
+javaw -jar """ + rootProject.name + """-""" + mVersion + """-all.jar
 """
         File outMac = file("out/libs/MacStart.sh")
         createScript(outMac, contentMac)
