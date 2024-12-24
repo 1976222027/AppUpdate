@@ -170,17 +170,19 @@ static def isWindows() {
  * 编译jar包+配置文件+运行脚本 都导出到 out/libs
  */
 task sources2Jar(type: Copy, dependsOn: ['shadowJar', 'createTextFile']) {
+    //把jar拷贝到out/libs
     from('build/libs/')
     into('out/libs')
-    File config = new File("config.json")
+    //复制config.json
+    File config = new File("out/libs/config.json")
     if (!config.exists()) {
-        //已存在就不拷贝了
+        //不存在才拷贝
         from('config.json')
         into('out/libs')
     }
     File[] listFiles = new File('out/libs/diff').listFiles();
     if (listFiles == null || listFiles.length == 0) {
-        //文件夹下没有文件
+        //文件夹下没有文件才拷贝
         println '复制diff'
         from('diff')
         into('out/libs/diff')
