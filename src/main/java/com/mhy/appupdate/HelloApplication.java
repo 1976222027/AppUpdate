@@ -5,26 +5,43 @@ import com.mhy.utils.ApkUtil;
 import com.mhy.utils.JsonUtil;
 import com.mhy.utils.ProgressFrom;
 import com.mhy.utils.ToastUtil;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.input.DragEvent;
-import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
-import javafx.scene.layout.*;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.Border;
+import javafx.scene.layout.BorderStroke;
+import javafx.scene.layout.BorderStrokeStyle;
+import javafx.scene.layout.BorderWidths;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import net.dongliu.apk.parser.bean.ApkMeta;
-
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
 
 public class HelloApplication extends Application {
     private static JSONObject config;
@@ -54,9 +71,10 @@ public class HelloApplication extends Application {
     private static int upMinVersion = 0;
     private static String upApkUrl = "";
     private static String upPatchUrl = "";
+    private static Boolean enableUpdate = null;
 
     public static void dragFile(Stage primaryStage) {
-        Label label = new Label("拖拽新版本apk到这里");
+        Label label = new Label("拖拽新版本apk到这里 或 ");
         TextField textFieldNew = new TextField();
         textFieldNew.setMinHeight(40);
         String newPath = config.getString("newApkPath");
@@ -64,22 +82,8 @@ public class HelloApplication extends Application {
             textFieldNew.setText(newPath);
         }
         Button btOpen = new Button("选择新版apk文件");
-        FileChooser chooser = new FileChooser();
-        chooser.setInitialDirectory(new File(System.getProperty("user.dir")));   //设置初始路径，默认为我的电脑
-        chooser.setTitle("打开文件");//设置窗口标题，默认为“打开”
-        chooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("apk", "*.apk"));
-        //筛选文件扩展
-        btOpen.setOnMouseClicked(e -> {
-            try {
-                textFieldNew.setText(chooser.showOpenDialog(primaryStage).getAbsolutePath());
-                //chooser.showOpenDialog(stage)得到File对象
-            } catch (Exception ex) {
-            }
-
-        });
-        Separator separator = new Separator(); // 默认是水平分隔符
-        separator.setOrientation(Orientation.VERTICAL);
-        Label label2 = new Label("拖拽旧版本apk到这里");
+        fileChoose(primaryStage, textFieldNew, btOpen);
+        Label label2 = new Label("拖拽旧版本apk到这里 或 ");
         TextField textFieldOld = new TextField();
         textFieldOld.setMinHeight(40);
         String oldPath = config.getString("oldApkPath");
@@ -87,22 +91,11 @@ public class HelloApplication extends Application {
             textFieldOld.setText(oldPath);
         }
         Button btOpen2 = new Button("选择旧版apk文件");
-        FileChooser chooser2 = new FileChooser();
-        chooser2.setInitialDirectory(new File(System.getProperty("user.dir")));   //设置初始路径，默认为我的电脑
-        chooser2.setTitle("打开文件");//设置窗口标题，默认为“打开”
-        chooser2.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("apk", "*.apk"));
-        //筛选文件扩展
-        btOpen2.setOnMouseClicked(e -> {
-            try {
-                textFieldOld.setText(chooser2.showOpenDialog(primaryStage).getAbsolutePath());
-                //chooser.showOpenDialog(stage)得到File对象
-            } catch (Exception ex) {
-            }
-
-        });
+        fileChoose(primaryStage, textFieldOld, btOpen2);
         Label info = new Label();
         info.setTextFill(Color.MAGENTA);
         info.setBorder(new Border(new BorderStroke(Color.GREEN, BorderStrokeStyle.SOLID, new CornerRadii(5), new BorderWidths(2))));
+        info.setMinHeight(30);
         info.setMaxWidth(560);
         info.setWrapText(true);
         // 创建一个垂直布局容器
@@ -139,31 +132,42 @@ public class HelloApplication extends Application {
         upApkUrl = config.getString("apkUrl");
         textField4.setText(upApkUrl);
         upPatchUrl = config.getString("patchUrl");
+        enableUpdate = config.getBoolean("enableUpdate");
+        if (enableUpdate == null){
+            enableUpdate = true;
+        }
         TextArea textField5 = new TextArea();
         textField5.setPrefRowCount(2);
         textField5.setText(upPatchUrl);
+        CheckBox cbox = new CheckBox("启用升级功能");
+        cbox.setPadding(new Insets(5));
+        cbox.setSelected(enableUpdate);
+        cbox.selectedProperty().addListener((obs, oldValue, newValue) -> {
+            enableUpdate = newValue;
+        });
         Button update = new Button("2.创建升级清单文件");
         update.setTextFill(Color.WHITE);
         update.setBackground(new Background(new BackgroundFill(Color.GREEN, new CornerRadii(8), null)));
-        Separator separator2 = new Separator(); // 默认是水平分隔符
-        separator2.setOrientation(Orientation.VERTICAL);
         update.setMinHeight(30);
         update.setMinWidth(100);
+        Separator separator3 = new Separator();
         // 添加标签和文本框到VBox
         vbox.getChildren().addAll(
+                separator3,
                 new Label("标题"),
                 textField1,
                 new Label("更新内容，【空格表示换行】"),
                 textField2,
-                new Label("低于该值[versionCode]的版本要强制升级,0不强制"),
+                new Label("minVersion 本地版本低于该值的一律强制更新,例如填新包的[versionCode]则全部强制更新, 0不强制"),
                 textField3,
                 new Label("全量更新包地址"),
                 textField4,
-                new Label("补丁包地址[不包含文件名字]"),
+                new Label("补丁包地址[不包含文件名字],文件名导出是啥就是啥，约定好"),
                 textField5,
-                separator2,
+                cbox,
                 update
         );
+        vbox.setPadding(new Insets(10, 0, 0, 0));
         //创建清单按钮
         update.setOnMouseClicked(event -> {
             if (newVersionName != null && !newVersionName.isEmpty()) {
@@ -178,6 +182,7 @@ public class HelloApplication extends Application {
                 config.put("minVersion", upMinVersion);
                 config.put("apkUrl", upApkUrl);
                 config.put("patchUrl", upPatchUrl);
+                config.put("enableUpdate", enableUpdate);
                 //取保存新版apk的信息
 //                String newMeta = ApkUtil.readFile(new File("out/dits/apkInfo/" + newVersionName + "_apkInfo.json"));
                 String newMeta = ApkUtil.readFile(new File("out/" + newAppName + "/apkInfo/" + newVersionName + "_apkInfo.json"));
@@ -191,6 +196,7 @@ public class HelloApplication extends Application {
                 updateInfo.setMessage(upMessage);
                 updateInfo.setMinVersion(upMinVersion);//低于此版 强制更新
                 updateInfo.setApkUrl(upApkUrl);
+                updateInfo.setEnableUpdate(enableUpdate);
 //                File[] listFiles = new File("out/dits/" + newVersionName).listFiles();
                 File[] listFiles = new File("out/" + newAppName + "/" + newVersionName).listFiles();
                 //目录下有差分补丁包吗
@@ -220,13 +226,14 @@ public class HelloApplication extends Application {
                         }
                     }
                 }
+                //生成更新表单，给前端使用
 //                JsonUtil.createJsonFile(updateInfo, "out/dits/" + newVersionName + "/updateVersion.json");
                 JsonUtil.createJsonFile(updateInfo, "out/" + newAppName + "/" + newVersionName + "/updateVersion.json");
                 //保存配置文件
                 ApkUtil.writeFile(JSONObject.toJSONString(config), new File("config.json"));
                 ToastUtil.toast("创建完成");
             } else {
-                ToastUtil.toast("请先点击->1.获取包信息");
+                ToastUtil.toast("请先完成->1.获取包信息");
             }
         });
         VBox vBox = new VBox(5);
@@ -236,12 +243,22 @@ public class HelloApplication extends Application {
         button.setTextFill(Color.WHITE);
         button.setBackground(new Background(new BackgroundFill(Color.GREEN, new CornerRadii(8), null)));
         button.setText("1.获取包信息(旧包空则不生成差分包),结果看下面提示");
-        Separator separator0 = new Separator(); // 默认是水平分隔符
-        separator0.setOrientation(Orientation.VERTICAL);
-        vBox.getChildren().addAll(separator0, button, info, vbox);
+        vBox.getChildren().addAll(button, info, vbox);
+        vBox.setPadding(new Insets(10, 0, 0, 0));
 
         VBox dragTarget = new VBox();
-        dragTarget.getChildren().addAll(label, textFieldNew, btOpen, separator, label2, textFieldOld, btOpen2, vBox);
+        HBox hBox1 = new HBox();
+        TextField labelNew = new TextField();
+        labelNew.setEditable(false);
+        labelNew.getStyleClass().add("copyablelabel");
+        hBox1.getChildren().addAll(label, btOpen, labelNew);
+        HBox hBox2 = new HBox();
+        TextField labelOld = new TextField();
+        labelOld.setEditable(false);
+        labelOld.getStyleClass().add("copyablelabel");
+        hBox2.getChildren().addAll(label2, btOpen2, labelOld);
+        hBox2.setPadding(new Insets(16, 0, 0, 0));
+        dragTarget.getChildren().addAll(hBox1, textFieldNew, hBox2, textFieldOld, vBox);
         textFieldNew.setOnDragOver(new EventHandler<DragEvent>() {
             @Override
             public void handle(DragEvent event) {
@@ -251,19 +268,8 @@ public class HelloApplication extends Application {
                 event.consume();
             }
         });
-        textFieldNew.setOnDragDropped(event -> {
-            Dragboard db = event.getDragboard();
-            boolean success = false;
-            if (db.hasFiles()) {
-                List<File> files = db.getFiles();
-                for (File file : files) {
-                    textFieldNew.setText(file.getAbsolutePath());
-                }
-                success = true;
-            }
-            event.setDropCompleted(success);
-            event.consume();
-        });
+        // 拖拽监听
+        textOnDragDropped(textFieldNew);
         //使用 DragEvent 事件处理器 可以在输入框的事件处理器中使用
         textFieldOld.setOnDragOver(event -> {
             if (event.getGestureSource() != dragTarget && event.getDragboard().hasFiles()) {
@@ -271,36 +277,25 @@ public class HelloApplication extends Application {
             }
             event.consume();
         });
-
-        textFieldOld.setOnDragDropped(event -> {
-            Dragboard db = event.getDragboard();
-            boolean success = false;
-            if (db.hasFiles()) {
-                List<File> files = db.getFiles();
-                for (File file : files) {
-                    textFieldOld.setText(file.getAbsolutePath());
-                }
-                success = true;
-            }
-            event.setDropCompleted(success);
-            event.consume();
-        });
+        // 拖拽监听
+        textOnDragDropped(textFieldOld);
 
         StackPane root = new StackPane();
-        //生成差分包按钮，不制作差分包 不填旧包即可，但也要点一下生成差分包，用于产出新包md5
+        //[获取包信息]生成差分包按钮，不制作差分包 不填旧包即可，但也要点一下生成差分包，用于产出新包md5
         button.setOnMouseClicked(event -> {
             if (textFieldNew.getText() != null && !textFieldNew.getText().isEmpty()) {
                 config.put("newApkPath", textFieldNew.getText());
                 ToastUtil.toast("获取ing,请稍等");
+                info.setText("获取ing,请稍等");
                 ProgressFrom progress = new ProgressFrom(primaryStage);
                 progress.activateProgressBar();
-
                 ApkMeta apkMetaNew = ApkUtil.getApkInfo(textFieldNew.getText());
-                if (apkMetaNew != null) {
+                if (apkMetaNew != null) {//文件存在
                     //String newMd5 = ApkUtil.getFileMD5(textFieldNew.getText());
                     //拿到新版本号
                     newVersionName = apkMetaNew.getVersionName();
                     newAppName = apkMetaNew.getName();//app名
+                    labelNew.setText(" VersionCode: "+apkMetaNew.getVersionCode());
                     //应用名作为目录
                     File dits = new File("out/" + newAppName + "/apkInfo");
                     if (!dits.exists()) {
@@ -316,11 +311,12 @@ public class HelloApplication extends Application {
                     if (!newVer.exists()) {
                         newVer.mkdirs();
                     }
-                    if (textFieldOld.getText() != null && !textFieldOld.getText().isEmpty()) {
+                    if (textFieldOld.getText() != null && !textFieldOld.getText().isEmpty()) {//有旧包，制作差分文件
                         config.put("oldApkPath", textFieldOld.getText());
                         ApkMeta apkMetaOld = ApkUtil.getApkInfo(textFieldOld.getText());
                         if (apkMetaOld != null) {
                             String oldVersionName = apkMetaOld.getVersionName();
+                            labelOld.setText(" VersionCode: "+apkMetaOld.getVersionCode());
                             //制作补丁时旧版md5已保存
                             //String oldApkMd5 = ApkUtil.getFileMD5(textFieldOld.getText());
                             String jsonOld = JSONObject.toJSONString(apkMetaOld);
@@ -341,20 +337,25 @@ public class HelloApplication extends Application {
                             cmd.add("out/" + newAppName + "/" + newVersionName + "/" + oldVersionName + "_" + newVersionName + "_apk.patch");//差分包名称
                             commandStart(cmd, info, progress);
                         }
-                    } else {
-                        info.setText("out file ok!");
+                    } else {//只有新包
+                        info.setText("获取包信息成功[out file ok!]");
                         progress.cancelProgressBar();
 //                    new Alert(Alert.AlertType.ERROR, "FFmpeg.exe Not Found.").show();
 //                    new Alert(Alert.AlertType.INFORMATION, "没有转码任务，请选择视频进行转码。").show();
                     }
+                    // 更新apk路径配置文件，其他信息还是旧的怕弄混，只留最后一个保存配置文件的操作
+                    //ApkUtil.writeFile(JSONObject.toJSONString(config), new File("config.json"));
                 } else {
-                    ToastUtil.toast("获取apk信息失败，请重试");
+                    ToastUtil.toast("获取apk信息失败，请确认文件是否存在");
+                    info.setText("获取apk信息失败，请确认文件是否存在");
+                    progress.cancelProgressBar();
                 }
             } else {
                 ToastUtil.toast("包路径空，请正确选择apk文件");
+                info.setText("包路径空，请正确选择apk文件");
             }
         });
-        root.setPadding(new Insets(10, 20, 10, 20));
+        root.setPadding(new Insets(20, 20, 10, 20));
 
         root.getChildren().add(dragTarget);
         //滚动布局包裹
@@ -362,19 +363,66 @@ public class HelloApplication extends Application {
         scrollPane.setContent(root);
         scrollPane.setFitToWidth(true); // 不显示横向滚动条
         Scene scene = new Scene(scrollPane, 600, 700);
-        String myValue = "";
-        try {
-            Properties props = new Properties();
-            props.load(new FileInputStream("gradle.properties"));
-            myValue = props.getProperty("VERSION_NAME");
-        } catch (Exception e) {
-        }
-        primaryStage.setTitle("制作apk差分包v" + myValue);
+        String myValue = getVersionFromManifest();
+        primaryStage.setTitle("制作apk差分包" + myValue);
         primaryStage.setScene(scene);
         primaryStage.show();
 
     }
 
+    /**
+     * 文件选择
+     */
+    private static void fileChoose(Stage primaryStage, TextField textField, Button btOpen) {
+        FileChooser chooser = new FileChooser();
+        chooser.setInitialDirectory(new File(System.getProperty("user.dir")));   //设置初始路径，默认为我的电脑
+        chooser.setTitle("打开文件");//设置窗口标题，默认为“打开”
+        chooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("apk", "*.apk"));
+        //筛选文件扩展
+        btOpen.setOnMouseClicked(e -> {
+            try {
+                textField.setText(chooser.showOpenDialog(primaryStage).getAbsolutePath());
+                //chooser.showOpenDialog(stage)得到File对象
+            } catch (Exception ignored) {}
+        });
+    }
+
+    /**
+     * 拖拽监听
+     */
+    private static void textOnDragDropped(javafx.scene.control.TextField textFieldOld) {
+        textFieldOld.setOnDragDropped(event -> {
+            javafx.scene.input.Dragboard db = event.getDragboard();
+            boolean success = false;
+            if (db.hasFiles()) {
+                java.util.List<java.io.File> files = db.getFiles();
+                for (java.io.File file : files) {
+                    textFieldOld.setText(file.getAbsolutePath());
+                }
+                success = true;
+            }
+            event.setDropCompleted(success);
+            event.consume();
+        });
+    }
+
+    public static String getVersionFromManifest() {
+        String jarPath = HelloApplication.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        String MANIFEST_VERSION_KEY = "Implementation-Version";
+        String MANIFEST_BUILD = "Built-Timestamp";
+        try {
+            JarFile jar = new JarFile(jarPath);
+            Manifest manifest = jar.getManifest();
+            Attributes attributes = manifest.getMainAttributes();
+            return "v_" + attributes.getValue(MANIFEST_VERSION_KEY)+"   build_"+attributes.getValue(MANIFEST_BUILD);
+        } catch (Exception ignored) {
+        }
+        return "";
+    }
+
+    /**
+     * 系统类型
+     */
     private static String getCmdByOSName() {
         String osName = System.getProperty("os.name");
         System.out.println(osName);
@@ -413,13 +461,14 @@ public class HelloApplication extends Application {
             BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
             info.setText("请等待完成");
             while ((line = br.readLine()) != null) {
-                info.setText("");
+                //info.setText("");
                 System.out.println(line);
-                info.setText("" + info.getText().trim() + line);
+                //info.setText("" + info.getText().trim() + line);
             }
+            info.setText("获取包信息成功[out file ok!]");
         } catch (IOException e) {
             e.printStackTrace();
-            info.setText(e.toString());
+            info.setText("[出错]" + e.toString());
         } finally {
             progress.cancelProgressBar();
             ToastUtil.toast("完成");

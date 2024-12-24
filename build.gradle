@@ -1,5 +1,16 @@
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+// 放plugins前
+buildscript {
+    repositories {
+        maven { url 'https://mirrors.tencent.com/nexus/repository/maven-public' }
+        maven { url 'https://maven.aliyun.com/repository/central' }
+    }
+}
 
 plugins {
     //    id 'java'
@@ -11,23 +22,33 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.0.10'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
+
+Properties properties = new Properties()
+properties.load(new FileInputStream('gradle.properties'))
+def GROUP_NAME = properties.getProperty('GROUP_NAME')
+def mVersion = properties.getProperty("VERSION_NAME");
+//版本
+group = GROUP_NAME
+version = mVersion
+
 jar {
     //archiveFileName = rootProject.name+'.jar'
     // 标志主类
-    manifest.attributes 'Main-Class': 'com.mhy.appupdate.JavaFXBootstrap'
+//    manifest.attributes 'Main-Class': 'com.mhy.appupdate.JavaFXBootstrap'
+//    manifest.attributes('Implementation-Version': mVersion)
+    manifest.attributes(
+                'Main-Class': 'com.mhy.appupdate.JavaFXBootstrap',
+                'Implementation-Version': mVersion,
+                'Built-By': System.getProperty('user.name'),
+                'Built-Timestamp': /*new Date().toString()*/ formatter1(),
+                'Built-OS': System.getProperty("os.name"),
+                'Built-Gradle': gradle.gradleVersion,
+                'Build-Jdk': System.getProperty('java.version')
+        )
 }
 
-repositories {
-    mavenCentral()
-}
+//定义启动类
 mainClassName = 'com.mhy.appupdate.JavaFXBootstrap'
-
-sourceCompatibility = '11'
-targetCompatibility = '11'
-
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
 
 application {
     mainModule = 'com.mhy.appupdate'
@@ -38,14 +59,14 @@ javafx {
     version = '11.0.2'
     modules = ['javafx.controls', 'javafx.fxml']
 }
+//放sourceCompatibility前
+repositories {
+    maven { url 'https://maven.aliyun.com/repository/central' }
+    mavenCentral()
+}
 
-Properties properties = new Properties()
-properties.load(new FileInputStream('gradle.properties'))
-def GROUP_NAME = properties.getProperty('GROUP_NAME')
-def mVersion = properties.getProperty("VERSION_NAME");
-//版本
-group GROUP_NAME
-version mVersion
+sourceCompatibility = '11'
+targetCompatibility = '11'
 
 dependencies {
     implementation('org.controlsfx:controlsfx:11.1.0')
@@ -55,7 +76,17 @@ dependencies {
     implementation 'com.alibaba.fastjson2:fastjson2:2.0.52'
     //md5
     //implementation 'commons-codec:commons-codec:1.17.1'
+}
 
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+static String formatter1() {
+    LocalDateTime now = LocalDateTime.now();
+    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:SSS");
+    String format = dtf.format(now);
+    return format;
 }
 // 写文件
 // outputFile 指定输出文件的路径
@@ -76,7 +107,7 @@ static void createScript(File outputFile, String content) {
 //创建运行脚本
 task createTextFile(type: DefaultTask) {
     doLast {
-        // 文本内容
+        // 脚本内容
         String content = """
 @echo off
 # 获取当前执行脚本的目录
@@ -130,40 +161,13 @@ task clearLib(type: Delete) {
 //    delete('out/'+rootProject.name)
 }
 
-//压缩文件
-task compressToZip(type: Zip, dependsOn: ['clearOut']) {
-    // 指定输出ZIP文件的名称
-    archiveFileName = rootProject.name + '-' + mVersion + '.zip'
-    // 指定ZIP文件存放的目录
-    destinationDir = file('out')
-    // 添加要压缩的文件或目录
-    from 'out/libs'
+static def isWindows() {
+    return org.gradle.internal.os.OperatingSystem.current().isWindows();
+//    return System.properties['os.name'].contains('windows');
 }
 
-task execTask() {
-    def mainJar = rootProject.name + '-' + mVersion + '-all.jar'
-    def cmd = "jpackage --type app-image --name " + rootProject.name + " --input out/libs --main-jar " + mainJar + " --win-console --dest out"
-    def cmdMac = "jpackage --name " + rootProject.name + " --input out/libs --main-jar " + mainJar + " --dest out"
-//    def commandLine = 'jpackage --name' + rootProject.name + ' --input ./out/libs --main-class com.mhy.appupdate.JavaFXBootstrap --output ./out --windows-shortcut'
-    println("first run :" + cmd)
-}
-// 确保编译和测试通过后再执行打包
-//execTask.mustRunAfter 'sources2Jar'
-//打包exe
-task compressExeToZip(type: Zip, dependsOn: ['execTask']) {
-    if (file("'out/' + rootProject.name").exists()) {
-        // 指定输出ZIP文件的名称
-        archiveFileName = rootProject.name + '-Win-' + mVersion + '.zip'
-        // 指定ZIP文件存放的目录
-        destinationDir = file('out')
-        // 添加要压缩的文件或目录
-        from 'out/' + rootProject.name
-    } else {
-        println("first run :execTask")
-    }
-}
-/**这个命令全包了
- * 将编译包导出，发布
+/**
+ * 编译jar包+配置文件+运行脚本 都导出到 out/libs
  */
 task sources2Jar(type: Copy, dependsOn: ['shadowJar', 'createTextFile']) {
     from('build/libs/')
@@ -182,5 +186,49 @@ task sources2Jar(type: Copy, dependsOn: ['shadowJar', 'createTextFile']) {
         into('out/libs/diff')
     }
 }
+//先 sources2Jar 打出jar包
+// 打exe执行文件
+task execTask(type: Exec/*, dependsOn: ['sources2Jar']*/) {
+    def out = new ByteArrayOutputStream()
+    //workingDir './'
+    def mainJar = rootProject.name + '-' + mVersion + '-all.jar'
+    def cmd = ""
+    if (isWindows()) {//window: cmd /c
+        cmd = "cmd /c jpackage --type app-image --name " + rootProject.name + " --input out/libs --main-jar " + mainJar + " --win-console --dest out"
+    } else {//mac linux:  bash -c
+        cmd = "jpackage --name " + rootProject.name + " --input out/libs --main-jar " + mainJar + " --dest out"
+    }
+//   'jpackage --name' + rootProject.name + ' --input ./out/libs --main-class com.mhy.appupdate.JavaFXBootstrap --output ./out --windows-shortcut'
+    // 注意 : Windows 命令行命令之前需要加上 "cmd /c " 信息 , Linux 与 MAC 命令行不用添加
+    commandLine = cmd.split(" ")
+    standardOutput = out
+    println(cmd)
+}
+
+//压缩文件
+task compressToZip(type: Zip, dependsOn: ['clearOut']) {
+    // 指定输出ZIP文件的名称
+    archiveFileName = rootProject.name + '-' + mVersion + '.zip'
+    // 指定ZIP文件存放的目录
+    destinationDir = file('out')
+    // 添加要压缩的文件或目录
+    from 'out/libs'
+}
+
+//先 sources2Jar 打出jar包, 确保编译和测试通过后再执行打压缩包
+//打包exe 压缩zip
+task compressExeToZip(type: Zip, dependsOn: ['execTask']) {
+    if (file("'out/' + rootProject.name").exists()) {
+        // 指定输出ZIP文件的名称
+        archiveFileName = rootProject.name + '-Win-' + mVersion + '.zip'
+        // 指定ZIP文件存放的目录
+        destinationDir = file('out')
+        // 添加要压缩的文件或目录
+        from 'out/' + rootProject.name
+    } else {
+        println("first run :execTask")
+    }
+}
+
 //执行完自动执行: 打压缩包,打完压缩包删除lib
 //sources2Jar.finalizedBy(compressExeToZip, compressToZip, clearLib)

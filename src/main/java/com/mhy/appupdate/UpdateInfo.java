@@ -14,6 +14,7 @@ public class UpdateInfo {
      * message : 央视体育客户端巴黎奥运会版本上线啦！
      * size : 1956631
      * apkUrl : apk
+     * enableUpdate : true
      * apkHash : ea97c8efa490a2eaf7d10b37e63dab0e
      * patchInfo : {"3.9.2":{"patchUrl":"dits/3.9.2_3.9.4_apk.patch","apkHash":"ea97c8efa490a2eaf7d10b37e63dab0e","oldHash":"ea97c8efa490a2eaf7d10b37e63dab0e","patchHash":"ea97c8efa490a2eaf7d10b37e63dab0e","size":1114810},"3.9.1":{"patchUrl":"dits/3.9.1_3.9.3_apk.patch","apkHash":"ea97c8efa490a2eaf7d10b37e63dab0e","oldHash":"ea97c8efa490a2eaf7d10b37e63dab0e","patchHash":"ea97c8efa490a2eaf7d10b37e63dab0e","size":1114810}}
      */
@@ -26,11 +27,12 @@ public class UpdateInfo {
     private int apkSize;
     private String apkUrl;
     private String apkHash;
+    private boolean enableUpdate;
 
     private Map<String, PatchBean> patchInfo;// = new HashMap<>();//不给默认值的话 fastjson转json后是null
 
     public UpdateInfo(){
-        patchInfo = new HashMap<>();//或者在构造给之
+        patchInfo = new HashMap<>();//或者在构造给之初始化
     }
 
     public int getMinVersion() {
@@ -95,6 +97,14 @@ public class UpdateInfo {
 
     public void setApkHash(String apkHash) {
         this.apkHash = apkHash;
+    }
+
+    public boolean getEnableUpdate() {
+        return enableUpdate;
+    }
+
+    public void setEnableUpdate(boolean enable) {
+        this.enableUpdate = enable;
     }
 
     public Map<String, PatchBean> getPatchInfo() {

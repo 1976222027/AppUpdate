@@ -51,7 +51,8 @@ jpackage --name appupdate --input out/libs --main-jar appupdate-1.1-all.jar --de
   "apkSize": 1956631,	// 最新apk文件大小
   "apkUrl": "https://app/update.apk", // 最新apk 绝对url地址，也可用相对地址，如下方的"patchURL"字段
   "apkHash": "ea97c8efa490a2eaf7d10b37e63dab0e", // 最新apk文件的md5值
-  "minVersion": 3900, // 低于此数值的app版本将强制更新 < 3940, 0不强制，最新版则全部强制
+  "minVersion": 3900, //最小支持版本 低于此数值的本地版本将强制更新, 0不强制，最新版versioncode则全部强制
+  "enableUpdate": true, //更新功能总开关，优先级最高, 可以随时设置更能功能是否可用
   "newVersionCode": 3940, // 当前最新版本代码
   "newVersionName": "3.9.4", // 当前最新版本代码
   "patchInfo": {  // 差分包信息,有那个版本，就是有补丁包 ,没有则全量更新

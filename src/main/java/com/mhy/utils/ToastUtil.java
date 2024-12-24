@@ -57,7 +57,7 @@ public class ToastUtil {
         label.setTextFill(Color.rgb(225, 255, 226));//消息字体颜色
         label.setPrefHeight(50);
         label.setPadding(new Insets(15));
-        label.setAlignment(Pos.CENTER);//居中
+        label.setAlignment(Pos.BOTTOM_CENTER);//居中
         label.setFont(new Font(20));//字体大小
         Scene scene = new Scene(label);
         scene.setFill(null);//场景透明
