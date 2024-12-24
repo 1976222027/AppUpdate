@@ -23,6 +23,14 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
+//定义启动类
+mainClassName = 'com.mhy.appupdate.JavaFXBootstrap'
+
+application {
+    mainModule = 'com.mhy.appupdate'
+    mainClass = mainClassName
+}
+
 Properties properties = new Properties()
 properties.load(new FileInputStream('gradle.properties'))
 def GROUP_NAME = properties.getProperty('GROUP_NAME')
@@ -34,10 +42,10 @@ version = mVersion
 jar {
     //archiveFileName = rootProject.name+'.jar'
     // 标志主类
-//    manifest.attributes 'Main-Class': 'com.mhy.appupdate.JavaFXBootstrap'
+//    manifest.attributes 'Main-Class': mainClassName
 //    manifest.attributes('Implementation-Version': mVersion)
     manifest.attributes(
-                'Main-Class': 'com.mhy.appupdate.JavaFXBootstrap',
+                'Main-Class': mainClassName,
                 'Implementation-Version': mVersion,
                 'Built-By': System.getProperty('user.name'),
                 'Built-Timestamp': /*new Date().toString()*/ formatter1(),
@@ -45,14 +53,6 @@ jar {
                 'Built-Gradle': gradle.gradleVersion,
                 'Build-Jdk': System.getProperty('java.version')
         )
-}
-
-//定义启动类
-mainClassName = 'com.mhy.appupdate.JavaFXBootstrap'
-
-application {
-    mainModule = 'com.mhy.appupdate'
-    mainClass = 'com.mhy.appupdate.JavaFXBootstrap'
 }
 
 javafx {
@@ -188,33 +188,29 @@ task sources2Jar(type: Copy, dependsOn: ['shadowJar', 'createTextFile']) {
         into('out/libs/diff')
     }
 }
-//先 sources2Jar 打出jar包
-// 打exe执行文件
-task execTask(type: Exec/*, dependsOn: ['sources2Jar']*/) {
+/**
+ * 删除已打包过的exe目录
+ */
+task clearExeDir(type: Delete) {
+    delete('out/'+rootProject.name)
+}
+
+//先 sources2Jar 打出jar包到out/libs
+// 打exe执行文件，exe和jar文件路径不一问题导致config等文件无法找到。。。。先不要打包exe了 用jar吧
+task execTask(type: Exec, dependsOn: [/*'sources2Jar', */'clearExeDir']) {
     def out = new ByteArrayOutputStream()
     //workingDir './'
     def mainJar = rootProject.name + '-' + mVersion + '-all.jar'
     def cmd = ""
     if (isWindows()) {//window: cmd /c
-        cmd = "cmd /c jpackage --type app-image --name " + rootProject.name + " --input out/libs --main-jar " + mainJar + " --win-console --dest out"
+        cmd = "cmd /c jpackage --type app-image --name " + rootProject.name + " --input ./out/libs --main-jar " + mainJar + " --win-console --dest ./out"
     } else {//mac linux:  bash -c
         cmd = "jpackage --name " + rootProject.name + " --input out/libs --main-jar " + mainJar + " --dest out"
     }
-//   'jpackage --name' + rootProject.name + ' --input ./out/libs --main-class com.mhy.appupdate.JavaFXBootstrap --output ./out --windows-shortcut'
     // 注意 : Windows 命令行命令之前需要加上 "cmd /c " 信息 , Linux 与 MAC 命令行不用添加
     commandLine = cmd.split(" ")
     standardOutput = out
     println(cmd)
-}
-
-//压缩文件
-task compressToZip(type: Zip, dependsOn: ['clearOut']) {
-    // 指定输出ZIP文件的名称
-    archiveFileName = rootProject.name + '-' + mVersion + '.zip'
-    // 指定ZIP文件存放的目录
-    destinationDir = file('out')
-    // 添加要压缩的文件或目录
-    from 'out/libs'
 }
 
 //先 sources2Jar 打出jar包, 确保编译和测试通过后再执行打压缩包
@@ -232,5 +228,14 @@ task compressExeToZip(type: Zip, dependsOn: ['execTask']) {
     }
 }
 
+//压缩整个out/libs文件
+task compressToZip(type: Zip, dependsOn: ['clearOut']) {
+    // 指定输出ZIP文件的名称
+    archiveFileName = rootProject.name + '-' + mVersion + '.zip'
+    // 指定ZIP文件存放的目录
+    destinationDir = file('out')
+    // 添加要压缩的文件或目录
+    from 'out/libs'
+}
 //执行完自动执行: 打压缩包,打完压缩包删除lib
 //sources2Jar.finalizedBy(compressExeToZip, compressToZip, clearLib)

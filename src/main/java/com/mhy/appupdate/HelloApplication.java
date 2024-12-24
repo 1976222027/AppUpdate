@@ -27,6 +27,7 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -133,7 +134,7 @@ public class HelloApplication extends Application {
         textField4.setText(upApkUrl);
         upPatchUrl = config.getString("patchUrl");
         enableUpdate = config.getBoolean("enableUpdate");
-        if (enableUpdate == null){
+        if (enableUpdate == null) {
             enableUpdate = true;
         }
         TextArea textField5 = new TextArea();
@@ -230,7 +231,7 @@ public class HelloApplication extends Application {
 //                JsonUtil.createJsonFile(updateInfo, "out/dits/" + newVersionName + "/updateVersion.json");
                 JsonUtil.createJsonFile(updateInfo, "out/" + newAppName + "/" + newVersionName + "/updateVersion.json");
                 //保存配置文件
-                ApkUtil.writeFile(JSONObject.toJSONString(config), new File("config.json"));
+                ApkUtil.writeFile(JSONObject.toJSONString(config), new File( "config.json"));
                 ToastUtil.toast("创建完成");
             } else {
                 ToastUtil.toast("请先完成->1.获取包信息");
@@ -295,7 +296,7 @@ public class HelloApplication extends Application {
                     //拿到新版本号
                     newVersionName = apkMetaNew.getVersionName();
                     newAppName = apkMetaNew.getName();//app名
-                    labelNew.setText(" VersionCode: "+apkMetaNew.getVersionCode());
+                    labelNew.setText(" VersionCode: " + apkMetaNew.getVersionCode());
                     //应用名作为目录
                     File dits = new File("out/" + newAppName + "/apkInfo");
                     if (!dits.exists()) {
@@ -316,7 +317,7 @@ public class HelloApplication extends Application {
                         ApkMeta apkMetaOld = ApkUtil.getApkInfo(textFieldOld.getText());
                         if (apkMetaOld != null) {
                             String oldVersionName = apkMetaOld.getVersionName();
-                            labelOld.setText(" VersionCode: "+apkMetaOld.getVersionCode());
+                            labelOld.setText(" VersionCode: " + apkMetaOld.getVersionCode());
                             //制作补丁时旧版md5已保存
                             //String oldApkMd5 = ApkUtil.getFileMD5(textFieldOld.getText());
                             String jsonOld = JSONObject.toJSONString(apkMetaOld);
@@ -375,7 +376,7 @@ public class HelloApplication extends Application {
      */
     private static void fileChoose(Stage primaryStage, TextField textField, Button btOpen) {
         FileChooser chooser = new FileChooser();
-        chooser.setInitialDirectory(new File(System.getProperty("user.dir")));   //设置初始路径，默认为我的电脑
+        chooser.setInitialDirectory(new File(System.getProperty("user.dir")/*当前工作目录*/));   //设置初始路径，默认为我的电脑
         chooser.setTitle("打开文件");//设置窗口标题，默认为“打开”
         chooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("apk", "*.apk"));
         //筛选文件扩展
@@ -383,20 +384,21 @@ public class HelloApplication extends Application {
             try {
                 textField.setText(chooser.showOpenDialog(primaryStage).getAbsolutePath());
                 //chooser.showOpenDialog(stage)得到File对象
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         });
     }
 
     /**
      * 拖拽监听
      */
-    private static void textOnDragDropped(javafx.scene.control.TextField textFieldOld) {
+    private static void textOnDragDropped(TextField textFieldOld) {
         textFieldOld.setOnDragDropped(event -> {
-            javafx.scene.input.Dragboard db = event.getDragboard();
+            Dragboard db = event.getDragboard();
             boolean success = false;
             if (db.hasFiles()) {
-                java.util.List<java.io.File> files = db.getFiles();
-                for (java.io.File file : files) {
+                List<File> files = db.getFiles();
+                for (File file : files) {
                     textFieldOld.setText(file.getAbsolutePath());
                 }
                 success = true;
@@ -414,7 +416,7 @@ public class HelloApplication extends Application {
             JarFile jar = new JarFile(jarPath);
             Manifest manifest = jar.getManifest();
             Attributes attributes = manifest.getMainAttributes();
-            return "v_" + attributes.getValue(MANIFEST_VERSION_KEY)+"   build_"+attributes.getValue(MANIFEST_BUILD);
+            return "v_" + attributes.getValue(MANIFEST_VERSION_KEY) + "   build_" + attributes.getValue(MANIFEST_BUILD);
         } catch (Exception ignored) {
         }
         return "";
@@ -426,15 +428,17 @@ public class HelloApplication extends Application {
     private static String getCmdByOSName() {
         String osName = System.getProperty("os.name");
         System.out.println(osName);
+        // 当前工作目录
+        String path = System.getProperty("user.dir");
         if (osName.startsWith("Mac OS")) {
             // 苹果
-            return System.getProperty("user.dir") + "/diff/macos/hdiffz";
+            return path + "/diff/macos/hdiffz";
         } else if (osName.startsWith("Windows")) {
             // windows
-            return System.getProperty("user.dir") + "/diff/windows64/hdiffz";
+            return path + "/diff/windows64/hdiffz.exe";
         } else {
             // unix or linux
-            return System.getProperty("user.dir") + "/diff/linux64/hdiffz";
+            return path + "/diff/linux64/hdiffz";
         }
     }
 
