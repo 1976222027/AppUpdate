@@ -1,0 +1,241 @@
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+// 放plugins前
+buildscript {
+    repositories {
+        maven { url 'https://mirrors.tencent.com/nexus/repository/maven-public' }
+        maven { url 'https://maven.aliyun.com/repository/central' }
+    }
+}
+
+plugins {
+    //    id 'java'
+    /**
+     * 使用 'java-library' 代替 'java'，功能更健全
+     */
+    id 'java-library'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.10'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+}
+
+//定义启动类
+mainClassName = 'com.mhy.appupdate.JavaFXBootstrap'
+
+application {
+    mainModule = 'com.mhy.appupdate'
+    mainClass = mainClassName
+}
+
+Properties properties = new Properties()
+properties.load(new FileInputStream('gradle.properties'))
+def GROUP_NAME = properties.getProperty('GROUP_NAME')
+def mVersion = properties.getProperty("VERSION_NAME");
+//版本
+group = GROUP_NAME
+version = mVersion
+
+jar {
+    //archiveFileName = rootProject.name+'.jar'
+    // 标志主类
+//    manifest.attributes 'Main-Class': mainClassName
+//    manifest.attributes('Implementation-Version': mVersion)
+    manifest.attributes(
+                'Main-Class': mainClassName,
+                'Implementation-Version': mVersion,
+                'Built-By': System.getProperty('user.name'),
+                'Built-Timestamp': /*new Date().toString()*/ formatter1(),
+                'Built-OS': System.getProperty("os.name"),
+                'Built-Gradle': gradle.gradleVersion,
+                'Build-Jdk': System.getProperty('java.version')
+        )
+}
+
+javafx {
+    version = '11.0.2'
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+//放sourceCompatibility前
+repositories {
+    maven { url 'https://maven.aliyun.com/repository/central' }
+    mavenCentral()
+}
+
+sourceCompatibility = '11'
+targetCompatibility = '11'
+
+dependencies {
+    implementation('org.controlsfx:controlsfx:11.1.0')
+//  获取apk的包名、版本名、版本号、图标等信息
+    implementation 'net.dongliu:apk-parser:2.5.3'
+//    json解析库 https://github.com/alibaba/fastjson2
+    implementation 'com.alibaba.fastjson2:fastjson2:2.0.52'
+    //md5
+    //implementation 'commons-codec:commons-codec:1.17.1'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+static String formatter1() {
+    LocalDateTime now = LocalDateTime.now();
+    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:SSS");
+    String format = dtf.format(now);
+    return format;
+}
+// 写文件
+// outputFile 指定输出文件的路径
+// content 文本内容
+static void createScript(File outputFile, String content) {
+    // 创建文件所在目录（如果不存在）
+    outputFile.parentFile.mkdirs()
+    // 写入文件内容
+    FileOutputStream fos = new FileOutputStream(outputFile)
+    OutputStreamWriter osw = new OutputStreamWriter(fos)
+    content += "\n# The current time is: ${new Date()}"
+    // 写入文件
+    osw.write(content)
+    osw.flush()
+    osw.close()
+    fos.close()
+}
+//创建运行脚本
+task createTextFile(type: DefaultTask) {
+    doLast {
+        // 脚本内容
+        String content = """
+@echo off
+# 获取当前执行脚本的目录
+set jarPath=%~dp0
+# 使用 javaw 启动一个jar,不带黑窗
+start javaw -jar %jarPath%""" + rootProject.name + """-""" + mVersion + """-all.jar
+"""
+        // 指定输出文件的路径
+        File outputFile = file("out/libs/WinStart.bat")
+        createScript(outputFile, content)
+        String content2 = """
+@echo off
+# 设置要终止的java 程序名称(通常是jar包名称)
+set appName=""" + rootProject.name + """-""" + mVersion + """-all.jar
+# 通过 jps 命令找到相关 jar 程序的进程 id
+for /F %%i in ('jps ^| findstr %appName%') do (set p=%%i)
+# 终止找到的进程id
+taskkill /f /pid %p%
+# 打印信息
+echo 'kill %appName%'
+"""
+        // 指定输出文件的路径
+        File outputFile2 = file("out/libs/WinStop.bat")
+        createScript(outputFile2, content2)
+
+        String contentMac = """
+#!/bin/bash
+echo "如果没有权限，chmod +x MacStart.sh"
+# 检查 Java 是否安装
+if ! command -v java &>/dev/null; then
+  echo "Java is not installed. Please install Java and try again."
+  exit
+fi
+
+# 指定 Java 命令 使用 javaw 启动一个jar,不带黑窗
+javaw -jar """ + rootProject.name + """-""" + mVersion + """-all.jar
+"""
+        File outMac = file("out/libs/MacStart.sh")
+        createScript(outMac, contentMac)
+    }
+}
+/**
+ * 删除使用产出的补丁和清单
+ */
+task clearOut(type: Delete) {
+    delete('out/libs/out')
+}
+//打完压缩包可以删除libs了
+task clearLib(type: Delete) {
+    delete('out/libs')
+//    delete('out/'+rootProject.name)
+}
+
+static def isWindows() {
+    return org.gradle.internal.os.OperatingSystem.current().isWindows();
+//    return System.properties['os.name'].contains('windows');
+}
+
+/**
+ * 编译jar包+配置文件+运行脚本 都导出到 out/libs
+ */
+task sources2Jar(type: Copy, dependsOn: ['shadowJar', 'createTextFile']) {
+    //把jar拷贝到out/libs
+    from('build/libs/')
+    into('out/libs')
+    //复制config.json
+    File config = new File("out/libs/config.json")
+    if (!config.exists()) {
+        //不存在才拷贝
+        from('config.json')
+        into('out/libs')
+    }
+    File[] listFiles = new File('out/libs/diff').listFiles();
+    if (listFiles == null || listFiles.length == 0) {
+        //文件夹下没有文件才拷贝
+        println '复制diff'
+        from('diff')
+        into('out/libs/diff')
+    }
+}
+/**
+ * 删除已打包过的exe目录
+ */
+task clearExeDir(type: Delete) {
+    delete('out/'+rootProject.name)
+}
+
+//先 sources2Jar 打出jar包到out/libs
+// 打exe执行文件，exe和jar文件路径不一问题导致config等文件无法找到。。。。先不要打包exe了 用jar吧
+task execTask(type: Exec, dependsOn: [/*'sources2Jar', */'clearExeDir']) {
+    def out = new ByteArrayOutputStream()
+    //workingDir './'
+    def mainJar = rootProject.name + '-' + mVersion + '-all.jar'
+    def cmd = ""
+    if (isWindows()) {//window: cmd /c
+        cmd = "cmd /c jpackage --type app-image --name " + rootProject.name + " --input ./out/libs --main-jar " + mainJar + " --win-console --dest ./out"
+    } else {//mac linux:  bash -c
+        cmd = "jpackage --name " + rootProject.name + " --input out/libs --main-jar " + mainJar + " --dest out"
+    }
+    // 注意 : Windows 命令行命令之前需要加上 "cmd /c " 信息 , Linux 与 MAC 命令行不用添加
+    commandLine = cmd.split(" ")
+    standardOutput = out
+    println(cmd)
+}
+
+//先 sources2Jar 打出jar包, 确保编译和测试通过后再执行打压缩包
+//打包exe 压缩zip
+task compressExeToZip(type: Zip, dependsOn: ['execTask']) {
+    if (file("'out/' + rootProject.name").exists()) {
+        // 指定输出ZIP文件的名称
+        archiveFileName = rootProject.name + '-Win-' + mVersion + '.zip'
+        // 指定ZIP文件存放的目录
+        destinationDir = file('out')
+        // 添加要压缩的文件或目录
+        from 'out/' + rootProject.name
+    } else {
+        println("first run :execTask")
+    }
+}
+
+//压缩整个out/libs文件
+task compressToZip(type: Zip, dependsOn: ['clearOut']) {
+    // 指定输出ZIP文件的名称
+    archiveFileName = rootProject.name + '-' + mVersion + '.zip'
+    // 指定ZIP文件存放的目录
+    destinationDir = file('out')
+    // 添加要压缩的文件或目录
+    from 'out/libs'
+}
+//执行完自动执行: 打压缩包,打完压缩包删除lib
+//sources2Jar.finalizedBy(compressExeToZip, compressToZip, clearLib)
