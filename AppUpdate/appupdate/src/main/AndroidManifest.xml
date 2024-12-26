@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!--设置该权限，主要是为了App可以进行版本更新下载apk并安装功能，方便用户升级操作。-->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <application>
+
+        <service
+            android:name="com.mhy.appupdate.service.DownloadService"
+            android:exported="false" />
+        <provider
+            android:name="com.mhy.appupdate.provider.DownloadFileProvider"
+            android:authorities="${applicationId}.AppUpdaterFileProvider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/download_file_paths" />
+        </provider>
+
+    </application>
+</manifest>

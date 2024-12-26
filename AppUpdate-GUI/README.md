@@ -57,7 +57,7 @@ jpackage --name appupdate --input out/libs --main-jar appupdate-1.1-all.jar --de
   "newVersionCode": 3940, // 当前最新版本代码
   "newVersionName": "3.9.4", // 当前最新版本代码
   "patchInfo": {  // 差分包信息,有那个版本，就是有补丁包 ,没有则全量更新
-    "3.9.2": { // 表示393升393需要下载的补丁包
+    "3.9.2": { // 表示392升394需要下载的补丁包
       "patchUrl": "dits/3.9.2_3.9.4_apk.patch", //差分包地址，相对此updateVersion.json文件的地址,也可用绝对地址
       "apkHash": "ea97c8efa490a2eaf7d10b37e63dab0e", // 合成后apk(即版本代码101)的文件md5值
       "oldHash": "ea97c8efa490a2eaf7d10b37e63dab0e", // 旧文件md5值

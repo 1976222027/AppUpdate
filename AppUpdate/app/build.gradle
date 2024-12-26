@@ -1,0 +1,40 @@
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace 'com.mhy.appupdate'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.mhy.appupdate"
+        minSdk 16
+        targetSdk 34
+        versionCode 5
+        versionName "1.5"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+
+    implementation libs.appcompat
+    implementation libs.okhttp3.okhttp
+    implementation libs.com.google.gson
+
+    implementation project(":appupdate")
+    implementation project(":hdpatch")
+    //兼容bsdiff
+//    implementation project(":hdpatch_ext")
+}

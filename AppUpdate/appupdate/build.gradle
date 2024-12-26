@@ -1,0 +1,106 @@
+plugins {
+    alias(libs.plugins.android.library)
+    id 'maven-publish'
+}
+
+android {
+    namespace 'com.mhy.hyappupdate'
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 16
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    //artifactory加了这个就传上去了
+    publishing {
+        singleVariant("release") {
+            //使用apg插件里的？会包含源码和文档
+//            withSourcesJar()
+//            withJavadocJar()
+        }
+    }
+}
+
+dependencies {
+//解决 API 23 以下 Android 版本可能出现的 so 库 link 不上的问题
+// 只需将System.loadLibrary("mylibrary");替换为ReLinker.loadLibrary(context, "mylibrary");
+    implementation libs.getkeepsafe.relinker
+    implementation libs.appcompat
+}
+
+def GROUP_ID = 'com.mhy'
+def ARTIFACT_ID = "hyappupdate"//project.getName()
+def VERSION_NAME = '0.0.1'
+//artifactory私库直接执行这里
+//afterEvaluate {
+//    publishing {
+//        publications {
+//            release(MavenPublication) {
+//                from components.release //这是用的apg插件提共的
+////                artifact androidSourcesJar //打包源码，去除这行打的包将看不到源码
+//                groupId = GROUP_ID
+//                artifactId = ARTIFACT_ID
+//                version = VERSION_NAME
+//            }
+//        }
+//        //发布远程仓库
+//        repositories {
+//            maven {
+//                allowInsecureProtocol true  // 如果MAVEN_LOCAL_PATH是http，此处必须为true，如果是https，则可以删除此项
+//                name = "artifactory"  //"nexus" 配置后在Gradle > Tasks > publishing 下会显示对应的名称，容易区分
+//                url = uri(MAVEN_URL)
+//                credentials {
+//                    username = MAVEN_USER
+//                    password = MAVEN_PASSWORD
+//                }
+//            }
+//        }
+//         //本地仓库
+//          //mavenLocal()
+//         //发布本地仓库
+//         //repository(url: uri('../repo'))  //仓库地址 ：该目录下的上两级
+////        repositories {
+////            maven {
+////                url = uri('../repo')
+////            }
+////        }
+//    }
+//}
+
+//源码打包aar的task
+//task androidSourcesJar(type: Jar) {
+tasks.register('androidSourcesJar', Jar) {
+    archiveClassifier.set("sources")
+    // 源码路径，包含Java、kotlin代码
+    from android.sourceSets.main.java.srcDirs
+    exclude "**/R.class"
+    exclude "**/BuildConfig.class"
+}
+//jitpack
+afterEvaluate {
+    publishing {
+        publications {
+            register(MavenPublication) {
+                from components.release
+                //这里头是artifacts的配置信息，不填会采用默认的
+                groupId = GROUP_ID
+                artifactId = ARTIFACT_ID
+                version = VERSION_NAME
+                // 增加上传源码的 task
+                artifact androidSourcesJar
+                // 必须有这个 否则不会上传AAR包  将bundleReleaseAar任务的单个输出文件作为发布的AAR文件。这样，该AAR文件就会成为 MavenPublication 的 artifact 并进行发布
+            }
+        }
+    }
+}
