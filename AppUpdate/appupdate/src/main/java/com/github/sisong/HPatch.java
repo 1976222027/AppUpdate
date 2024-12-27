@@ -61,7 +61,7 @@ public class HPatch {
         FutureTask<Integer> task = new FutureTask<Integer>(new Callable<Integer>() {
             @Override
             public Integer call() {
-                return patchApk(oldFileName, diffFileName, outNewFileName);
+                return patch(oldFileName, diffFileName, outNewFileName);
             }
 
         });
@@ -83,13 +83,13 @@ public class HPatch {
     //    if diffFile created by $bsdiff4, and patch very slow,
     //      then cacheMemory recommended oldFileSize+256*1024;
 
-    private static native int patchApk(String oldFileName, String diffFileName, String outNewFileName, long cacheMemory);
+    private static native int patch(String oldFileName, String diffFileName, String outNewFileName, long cacheMemory);
 
     /**
      * 合并补丁方法
      * @return 0 成功
      */
-    private static int patchApk(String oldFileName, String diffFileName, String outNewFileName) {
-        return patchApk(oldFileName, diffFileName, outNewFileName, -1);
+    private static int patch(String oldFileName, String diffFileName, String outNewFileName) {
+        return patch(oldFileName, diffFileName, outNewFileName, -1);
     }
 }

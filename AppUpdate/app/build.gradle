@@ -43,6 +43,7 @@ dependencies {
     implementation libs.appcompat
     implementation libs.okhttp3.okhttp
     implementation libs.com.google.gson
-    implementation 'com.mhy:appupdate:0.0.1'
-//    implementation project(":appupdate")
+//    implementation 'com.mhy:appupdate:0.0.1' //local
+//    implementation 'com.gitee.mahongyin:appupdate-aar:0.0.1'
+    implementation project(":appupdate")
 }
