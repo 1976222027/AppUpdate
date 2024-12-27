@@ -40,10 +40,9 @@ dependencies {
     //implementation libs.getkeepsafe.relinker
     implementation libs.appcompat
 }
-
+def VERSION_NAME = '0.0.2'
 def GROUP_ID = 'com.mhy'
 def ARTIFACT_ID = "appupdate"//project.getName()
-def VERSION_NAME = '0.0.1'
 def REPO_PACK = "com/mhy/appupdate/$VERSION_NAME"
 def REPO_NAME = ARTIFACT_ID+"-aar"
 //源码打包aar的task
@@ -206,7 +205,7 @@ tasks.register("createJitPackYml") {
     String yml = '''install:
   - FILE="-Dfile=''' + ARTIFACT_ID + '''-''' + VERSION_NAME + '''.aar"
   - mvn install:install-file $FILE -DgroupId=''' + GROUP_ID + ''' -DartifactId=''' + ARTIFACT_ID + ''' -Dversion=''' + VERSION_NAME + ''' -Dpackaging=aar -DpomFile=pom.xml'''
-    File f = file("../../$EPO_NAME/jitpack.yml")
+    File f = file("../../$REPO_NAME/jitpack.yml")
     if (f.exists()) {
         f.delete()
     }
