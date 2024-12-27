@@ -35,7 +35,7 @@ android {
 dependencies {
 //解决 API 23 以下 Android 版本可能出现的 so 库 link 不上的问题
 // 只需将System.loadLibrary("mylibrary");替换为ReLinker.loadLibrary(context, "mylibrary");
-    implementation libs.getkeepsafe.relinker
+    //implementation libs.getkeepsafe.relinker
     implementation libs.appcompat
 }
 

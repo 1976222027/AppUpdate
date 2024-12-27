@@ -406,11 +406,10 @@ public class DownloadService extends Service {
                 //获取当前安装包的路径
                 File oldApk = new File(context.getPackageCodePath());
                 File newApk = new File(savePath, apkName);
-                HPatch.getInstance().patch(oldApk.getAbsolutePath(), file.getAbsolutePath(), newApk.getAbsolutePath(), new HPatch.PatchCallback() {
+                HPatch.getInstance().patchApk(oldApk.getAbsolutePath(), file.getAbsolutePath(), newApk.getAbsolutePath(), new HPatch.PatchCallback() {
                     @Override
-                    public void onPatchResult(int result) {
-                        LogUtils.d("result = " + result);
-                        if (result == 0){
+                    public void onPatchResult(boolean success) {
+                        if (success){
                             boolean isOK = true;
                             if (!TextUtils.isEmpty(config.getApkMD5())) {
                                 isOK = AppUtils.verifyFileMD5(newApk, config.getApkMD5());

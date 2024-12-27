@@ -1,9 +1,7 @@
 package com.github.sisong;
 
 import android.content.Context;
-import android.os.Build;
 
-import com.getkeepsafe.relinker.ReLinker;
 import com.mhy.appupdate.util.LogUtils;
 
 import java.util.concurrent.Callable;
@@ -15,13 +13,12 @@ import java.util.concurrent.FutureTask;
  * 子线程异步去执行
  */
 public class HPatch {
+
     private static HPatch instance;
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private boolean init = false;
 
-    // auto load libhpatchz.so ?
-    // static { System.loadLibrary("hpatchz"); }
     public static HPatch getInstance() {
         if (instance == null) {
             synchronized (HPatch.class) {
@@ -32,20 +29,21 @@ public class HPatch {
         }
         return instance;
     }
-
+    // auto load libhpatchz.so ?
+    // static { System.loadLibrary("hpatchz"); }
     public void initSo(Context context) {
         if (!init) {
             init = true;
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                ReLinker.loadLibrary(context, "hpatchz");
-            } else {
+//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+//                ReLinker.loadLibrary(context, "hpatchz");
+//            } else {
                 System.loadLibrary("hpatchz");
-            }
+//            }
         }
     }
 
     public interface PatchCallback {
-        void onPatchResult(int result);
+        void onPatchResult(boolean success);
     }
 
 
@@ -57,19 +55,19 @@ public class HPatch {
      * @param outNewFileName 新文件目标
      * @param callback       回调
      */
-    public void patch(String oldFileName, String diffFileName, String outNewFileName, PatchCallback callback) {
+    public void patchApk(String oldFileName, String diffFileName, String outNewFileName, PatchCallback callback) {
         if (!init) throw new RuntimeException("please call initSo() first");
         LogUtils.e(oldFileName+","+diffFileName+","+outNewFileName);
         FutureTask<Integer> task = new FutureTask<Integer>(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
-                return patch(oldFileName, diffFileName, outNewFileName);
+                return patchApk(oldFileName, diffFileName, outNewFileName);
             }
 
         });
         executor.execute(task);
         try {
-            callback.onPatchResult(task.get());
+            callback.onPatchResult(task.get() == 0);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -85,13 +83,13 @@ public class HPatch {
     //    if diffFile created by $bsdiff4, and patch very slow,
     //      then cacheMemory recommended oldFileSize+256*1024;
 
-    private static native int patch(String oldFileName, String diffFileName, String outNewFileName, long cacheMemory);
+    private static native int patchApk(String oldFileName, String diffFileName, String outNewFileName, long cacheMemory);
 
     /**
      * 合并补丁方法
      * @return 0 成功
      */
-    private static int patch(String oldFileName, String diffFileName, String outNewFileName) {
-        return patch(oldFileName, diffFileName, outNewFileName, -1);
+    private static int patchApk(String oldFileName, String diffFileName, String outNewFileName) {
+        return patchApk(oldFileName, diffFileName, outNewFileName, -1);
     }
 }
