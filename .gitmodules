@@ -1,0 +1,3 @@
+[submodule "appupdate-aar"]
+	path = appupdate-aar
+	url = https://gitee.com/mahongyin/appupdate-aar.git

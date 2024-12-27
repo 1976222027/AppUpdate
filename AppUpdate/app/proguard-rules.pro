@@ -24,7 +24,6 @@
 #---------------------------------基本指令区----------------------------------
 -optimizationpasses 5
 -dontskipnonpubliclibraryclassmembers
--printmapping proguardMapping.txt
 -optimizations !code/simplification/cast,!field/*,!class/merging/*
 -keepattributes *Annotation*,InnerClasses
 -keepattributes Signature
