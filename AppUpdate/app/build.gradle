@@ -34,7 +34,4 @@ dependencies {
     implementation libs.com.google.gson
 
     implementation project(":appupdate")
-    implementation project(":hdpatch")
-    //兼容bsdiff
-//    implementation project(":hdpatch_ext")
 }

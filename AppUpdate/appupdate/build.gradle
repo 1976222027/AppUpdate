@@ -81,9 +81,9 @@ def VERSION_NAME = '0.0.1'
 //源码打包aar的task
 //task androidSourcesJar(type: Jar) {
 tasks.register('androidSourcesJar', Jar) {
-    archiveClassifier.set("sources")
     // 源码路径，包含Java、kotlin代码
     from android.sourceSets.main.java.srcDirs
+    archiveClassifier.set("sources")
     exclude "**/R.class"
     exclude "**/BuildConfig.class"
 }

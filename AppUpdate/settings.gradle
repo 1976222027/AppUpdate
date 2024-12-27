@@ -7,6 +7,7 @@ pluginManagement {
                 includeGroupByRegex("androidx.*")
             }
         }
+        maven { url 'https://jitpack.io' }
         mavenCentral()
         gradlePluginPortal()
     }
@@ -16,6 +17,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://jitpack.io' }
         maven {//本地仓库
             url = uri("../repo")
         }
@@ -25,5 +27,3 @@ dependencyResolutionManagement {
 rootProject.name = "AppUpdate"
 include ':app'
 include ':appupdate'
-include ':hdpatch'
-include ':hdpatch_ext'
