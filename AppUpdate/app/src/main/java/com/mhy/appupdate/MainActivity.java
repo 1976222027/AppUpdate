@@ -1,6 +1,7 @@
 package com.mhy.appupdate;
 
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -184,11 +185,11 @@ public class MainActivity extends AppCompatActivity {
         });
         Executors.newCachedThreadPool().execute(futureTask);
         try {
-            function.invoke(futureTask.get());
-        } catch (Exception e) {
-            function.invoke("");
-        }
-
+            String result = futureTask.get();
+            if (!TextUtils.isEmpty(result)) {
+                function.invoke(result);
+            }
+        } catch (Exception ignored) {}
     }
 
     @Override

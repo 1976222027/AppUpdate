@@ -36,7 +36,7 @@ public class OkHttpManager implements IHttpManager {
 
     public static OkHttpManager getInstance() {
         if (INSTANCE == null) {
-            synchronized (HttpManager.class) {
+            synchronized (OkHttpManager.class) {
                 if (INSTANCE == null) {
                     INSTANCE = new OkHttpManager();
                 }

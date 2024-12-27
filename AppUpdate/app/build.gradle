@@ -14,11 +14,22 @@ android {
         versionName "1.5"
 
     }
-
+    signingConfigs {
+        create("release") {
+            storeFile file("D:\\ApkKey\\55.jks")
+            storePassword "201055"
+            keyAlias "55"
+            keyPassword "201055"
+        }
+    }
     buildTypes {
         release {
-            minifyEnabled false
+            signingConfig signingConfigs.getByName("release")
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            signingConfig signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -32,6 +43,6 @@ dependencies {
     implementation libs.appcompat
     implementation libs.okhttp3.okhttp
     implementation libs.com.google.gson
-
-    implementation project(":appupdate")
+    implementation 'com.mhy:appupdate:0.0.1'
+//    implementation project(":appupdate")
 }

@@ -17,10 +17,12 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+
         maven { url 'https://jitpack.io' }
-        maven {//本地仓库
-            url = uri("../repo")
-        }
+//        maven {//本地仓库
+//            url = uri("../repo")
+//        }
+//        mavenLocal() //.gradle\caches\modules-2\files-2.1
     }
 }
 

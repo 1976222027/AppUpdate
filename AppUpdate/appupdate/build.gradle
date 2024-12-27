@@ -1,3 +1,5 @@
+// 引入XML相关的库
+
 plugins {
     alias(libs.plugins.android.library)
     id 'maven-publish'
@@ -14,7 +16,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -40,15 +42,27 @@ dependencies {
 }
 
 def GROUP_ID = 'com.mhy'
-def ARTIFACT_ID = "hyappupdate"//project.getName()
+def ARTIFACT_ID = "appupdate"//project.getName()
 def VERSION_NAME = '0.0.1'
+def REPO_PACK = "com/mhy/appupdate/$VERSION_NAME"
+def REPO_NAME = ARTIFACT_ID+"-aar"
+//源码打包aar的task
+//task androidSourcesJar(type: Jar) {
+tasks.register('androidSourcesJar', Jar) {
+    // 源码路径，包含Java、kotlin代码
+    from android.sourceSets.main.java.srcDirs
+    archiveClassifier.set("sources")
+    exclude "**/R.class"
+    exclude "**/BuildConfig.class"
+}
+
 //artifactory私库直接执行这里
 //afterEvaluate {
 //    publishing {
 //        publications {
 //            release(MavenPublication) {
 //                from components.release //这是用的apg插件提共的
-////                artifact androidSourcesJar //打包源码，去除这行打的包将看不到源码
+////                artifact androidSourcesJar //自定义打包源码task，去除这行打的包将看不到源码
 //                groupId = GROUP_ID
 //                artifactId = ARTIFACT_ID
 //                version = VERSION_NAME
@@ -66,41 +80,135 @@ def VERSION_NAME = '0.0.1'
 //                }
 //            }
 //        }
-//         //本地仓库
-//          //mavenLocal()
 //         //发布本地仓库
-//         //repository(url: uri('../repo'))  //仓库地址 ：该目录下的上两级
 ////        repositories {
 ////            maven {
-////                url = uri('../repo')
+////                url = uri('../../'+REPO_NAME)
 ////            }
 ////        }
 //    }
 //}
 
-//源码打包aar的task
-//task androidSourcesJar(type: Jar) {
-tasks.register('androidSourcesJar', Jar) {
-    // 源码路径，包含Java、kotlin代码
-    from android.sourceSets.main.java.srcDirs
-    archiveClassifier.set("sources")
-    exclude "**/R.class"
-    exclude "**/BuildConfig.class"
-}
 //jitpack
+//afterEvaluate {
+//    publishing {
+//        publications {
+//            register(MavenPublication) {
+//                //这里头是artifacts的配置信息，不填会采用默认的
+//                groupId = GROUP_ID
+//                artifactId = ARTIFACT_ID
+//                version = VERSION_NAME
+//                //AGP3.6.0及以上才能使用的打包源码
+//                from components.release
+//                //自定义打包源码的task
+//                //artifact androidSourcesJar
+//                //用自定义打包源码的task 必须有这个 否则不会上传AAR包  将bundleReleaseAar任务的单个输出文件作为发布的AAR文件。这样，该AAR文件就会成为 MavenPublication 的 artifact 并进行发布
+//                //afterEvaluate { artifact(tasks.getByName("bundleReleaseAar")) }
+//            }
+//        }
+//    }
+//}
+
+// 将本地repo发布JitPack
+//1.将当前module打包发布到本地maven仓库
 afterEvaluate {
     publishing {
+        //配置maven仓库
+        repositories {
+            maven { url uri("../../"+REPO_NAME) }
+        }
+        //配置发布产物
         publications {
-            register(MavenPublication) {
+            maven(MavenPublication) {//容器可配置的信息MavenPublication
+                groupId GROUP_ID
+                artifactId ARTIFACT_ID
+                version VERSION_NAME
+                //注：AGP 3.6.0及以上才能使用，作用是将 Android Gradle 插件生成的组件，作为发布的内容
                 from components.release
-                //这里头是artifacts的配置信息，不填会采用默认的
-                groupId = GROUP_ID
-                artifactId = ARTIFACT_ID
-                version = VERSION_NAME
-                // 增加上传源码的 task
-                artifact androidSourcesJar
-                // 必须有这个 否则不会上传AAR包  将bundleReleaseAar任务的单个输出文件作为发布的AAR文件。这样，该AAR文件就会成为 MavenPublication 的 artifact 并进行发布
             }
         }
     }
+}
+//./gradlew publish
+//./gradlew publishToMavenLocal    //到本地.gradle\caches\modules-2\files-2.1
+
+//2.现在aar和pom文件都有了，接下来就可以着手发布到jitpack了
+//把aar和pom文件放空白仓库
+//pom名字就改成pom.xml
+//jitpack.yml 作用是，让 jitpack 直接使用我们提供的 aar 和 pom 文件，不需要它来生成
+//install:
+//  - FILE="-Dfile=appupdate-0.0.1.aar"
+//  - mvn install:install-file $FILE -DgroupId=com.mhy -DartifactId=appupdate -Dversion=0.0.1 -Dpackaging=aar -DpomFile=pom.xml
+//提交的记录打个 tag，并且基于这个 tag 发布一个 release
+// 参考 https://mp.weixin.qq.com/s/5ya7pQ7VNPGtoUZ95jIYVg
+tasks.register("mvPom") {
+    group = "mavenRepo"
+    description = "修改pom文件"
+    String path = "../../"+REPO_NAME+"/" + REPO_PACK + "/" + ARTIFACT_ID + "-" + VERSION_NAME
+    println(path)
+    if (file(path + ".aar").exists()) {
+        copy {
+            from path + ".aar"
+            into "../../$REPO_NAME/"
+        }
+    }
+    File f = file(path + ".pom")
+    if (f.exists()) {
+        f.renameTo(file("../../$REPO_NAME/pom.xml"))
+        delete "../../$REPO_NAME/com"
+    }
+    // jitpack.yml只配置了找自己的aar但会报错信息是 ERROR: No build artifacts found，这个报错是因为我们上传的aar和pom文件没有存放到
+    // $HOME/.m2/repository 等标准目录下，所以 jitpack 找不到了。不过，可以给 pom 文件中声明构建时使用
+    // android-maven-plugin 插件来解决：
+    // 改pom
+    String plugin = """<build>
+    <plugins>
+      <plugin>
+        <groupId>com.simpligility.maven.plugins</groupId>
+        <artifactId>android-maven-plugin</artifactId>
+        <version>4.1.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <encoding>utf8</encoding>
+          <source>1.8</source>
+          <target>1.8</target>
+          <sign>
+            <debug>false</debug>
+          </sign>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>"""
+
+    // 调用写入XML数据的方法
+    File f2 = file("../../$REPO_NAME/pom.xml")
+    List<String> lines = f2.readLines()
+    StringBuffer newLines = new StringBuffer()
+    if (!lines.contains("<artifactId>android-maven-plugin</artifactId>")) {
+        lines.each {
+            newLines.append(it).append("\n")
+            if (it.contains("<packaging>aar</packaging>")) {
+                newLines.append(plugin).append("\n")
+            }
+        }
+        println("----------------")
+        String xml = newLines.toString()
+        f2.withWriter { writer ->
+            writer.write(xml)
+        }
+    }
+}
+// 执行任务后 取repo目录上传github 打tag 发布jitpack
+tasks.register("createJitPackYml") {
+    dependsOn "mvPom"
+    group = "mavenRepo"
+    description = "创建jitpack.yaml文件"
+    String yml = '''install:
+  - FILE="-Dfile=''' + ARTIFACT_ID + '''-''' + VERSION_NAME + '''.aar"
+  - mvn install:install-file $FILE -DgroupId=''' + GROUP_ID + ''' -DartifactId=''' + ARTIFACT_ID + ''' -Dversion=''' + VERSION_NAME + ''' -Dpackaging=aar -DpomFile=pom.xml'''
+    File f = file("../../$EPO_NAME/jitpack.yml")
+    if (f.exists()) {
+        f.delete()
+    }
+    f.write(yml, "UTF-8")
 }

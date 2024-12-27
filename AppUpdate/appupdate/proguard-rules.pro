@@ -19,3 +19,21 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keep class com.mhy.appupdate.UpdateConfig { *; }
+-keep class com.mhy.appupdate.constant.Constants { *; }
+-keep class com.mhy.appupdate.AppUpdater { *; }
+-keep class com.mhy.appupdate.AppUpdater$Builder { *; }
+# service
+-keep class com.mhy.appupdate.service.DownloadService { *; }
+# FileProvider
+-keep class com.mhy.appupdate.provider.DownloadFileProvider { *; }
+# 接口
+-keep interface com.mhy.appupdate.listener.* { *; }
+-keep interface com.mhy.appupdate.http.* { *; }
+-keep interface com.mhy.appupdate.notify.* { *; }
+-keep class com.mhy.appupdate.util.*  { *; }
+# 保留native方法
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
