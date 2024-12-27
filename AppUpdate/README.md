@@ -9,7 +9,7 @@ implementation "com.gitee.mahongyin:dpatch_ext_so:$version"
 android sdk 9 armv5    
 android sdk 16 armv7    
 android sdk 21 arm64    
-```java
+```text
     
 更新策略
 enableUpdate = true; 优先级最高，如果设置为false，整个更新功能都不生效

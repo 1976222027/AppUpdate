@@ -14,7 +14,7 @@ import java.util.concurrent.FutureTask;
  */
 public class HPatch {
 
-    private static HPatch instance;
+    private static volatile HPatch instance;
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private boolean init = false;
@@ -60,7 +60,7 @@ public class HPatch {
         LogUtils.e(oldFileName+","+diffFileName+","+outNewFileName);
         FutureTask<Integer> task = new FutureTask<Integer>(new Callable<Integer>() {
             @Override
-            public Integer call() throws Exception {
+            public Integer call() {
                 return patchApk(oldFileName, diffFileName, outNewFileName);
             }
 

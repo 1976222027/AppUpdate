@@ -36,7 +36,7 @@ public class DownloadService extends Service {
     /**
      * DownloadBinder
      */
-    private DownloadBinder mDownloadBinder = new DownloadBinder();
+    private DownloadBinder mDownloadBinder;
     /**
      * 是否在下载，防止重复下载。
      */
@@ -506,6 +506,9 @@ public class DownloadService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
+        if (mDownloadBinder == null) {
+            mDownloadBinder = new DownloadBinder();
+        }
         return mDownloadBinder;
     }
 
