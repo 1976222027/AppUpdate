@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace 'com.mhy.hyappupdate'
+    namespace 'com.mhy.appupdate'
     compileSdk 34
 
     defaultConfig {
@@ -38,13 +38,13 @@ dependencies {
 //解决 API 23 以下 Android 版本可能出现的 so 库 link 不上的问题
 // 只需将System.loadLibrary("mylibrary");替换为ReLinker.loadLibrary(context, "mylibrary");
     //implementation libs.getkeepsafe.relinker
-    implementation libs.appcompat
+    compileOnly libs.appcompat
 }
 def VERSION_NAME = '0.0.2'
 def GROUP_ID = 'com.mhy'
 def ARTIFACT_ID = "appupdate"//project.getName()
 def REPO_PACK = "com/mhy/appupdate/$VERSION_NAME"
-def REPO_NAME = ARTIFACT_ID+"-aar"
+def REPO_NAME = ARTIFACT_ID + "-aar"
 //源码打包aar的task
 //task androidSourcesJar(type: Jar) {
 tasks.register('androidSourcesJar', Jar) {
@@ -114,7 +114,7 @@ afterEvaluate {
     publishing {
         //配置maven仓库
         repositories {
-            maven { url uri("../../"+REPO_NAME) }
+            maven { url uri("../../" + REPO_NAME) }
         }
         //配置发布产物
         publications {
@@ -140,27 +140,39 @@ afterEvaluate {
 //  - mvn install:install-file $FILE -DgroupId=com.mhy -DartifactId=appupdate -Dversion=0.0.1 -Dpackaging=aar -DpomFile=pom.xml
 //提交的记录打个 tag，并且基于这个 tag 发布一个 release
 // 参考 https://mp.weixin.qq.com/s/5ya7pQ7VNPGtoUZ95jIYVg
-tasks.register("mvPom") {
+tasks.register("mvPom", Task.class) {
     group = "mavenRepo"
     description = "修改pom文件"
-    String path = "../../"+REPO_NAME+"/" + REPO_PACK + "/" + ARTIFACT_ID + "-" + VERSION_NAME
-    println(path)
-    if (file(path + ".aar").exists()) {
-        copy {
-            from path + ".aar"
-            into "../../$REPO_NAME/"
+    dependsOn(tasks.named("publish"))
+    doLast {
+        String path = "../../" + REPO_NAME + "/" + REPO_PACK + "/" + ARTIFACT_ID + "-" + VERSION_NAME
+        println(path)
+        if (file(path + ".aar").exists()) {
+            file("../../$REPO_NAME/").listFiles().each {
+                println(it)
+                if (it.isFile() && !it.name.endsWith(".aar")) {
+                    it.delete()
+                }
+            }
+            copy {
+                from path + ".aar"
+                into "../../$REPO_NAME/"
+            }
         }
-    }
-    File f = file(path + ".pom")
-    if (f.exists()) {
-        f.renameTo(file("../../$REPO_NAME/pom.xml"))
-        delete "../../$REPO_NAME/com"
-    }
-    // jitpack.yml只配置了找自己的aar但会报错信息是 ERROR: No build artifacts found，这个报错是因为我们上传的aar和pom文件没有存放到
-    // $HOME/.m2/repository 等标准目录下，所以 jitpack 找不到了。不过，可以给 pom 文件中声明构建时使用
-    // android-maven-plugin 插件来解决：
-    // 改pom
-    String plugin = """<build>
+        File f = file(path + ".pom")
+        if (f.exists()) {
+            File ff = file("../../$REPO_NAME/pom.xml")
+            if(ff.exists()) {
+                ff.delete()
+            }
+            f.renameTo(ff)
+            delete "../../$REPO_NAME/com"
+        }
+        // jitpack.yml只配置了找自己的aar但会报错信息是 ERROR: No build artifacts found，这个报错是因为我们上传的aar和pom文件没有存放到
+        // $HOME/.m2/repository 等标准目录下，所以 jitpack 找不到了。不过，可以给 pom 文件中声明构建时使用
+        // android-maven-plugin 插件来解决：
+        // 改pom
+        String plugin = """<build>
     <plugins>
       <plugin>
         <groupId>com.simpligility.maven.plugins</groupId>
@@ -179,35 +191,41 @@ tasks.register("mvPom") {
     </plugins>
   </build>"""
 
-    // 调用写入XML数据的方法
-    File f2 = file("../../$REPO_NAME/pom.xml")
-    List<String> lines = f2.readLines()
-    StringBuffer newLines = new StringBuffer()
-    if (!lines.contains("<artifactId>android-maven-plugin</artifactId>")) {
-        lines.each {
-            newLines.append(it).append("\n")
-            if (it.contains("<packaging>aar</packaging>")) {
-                newLines.append(plugin).append("\n")
+        // 调用写入XML数据的方法
+        File f2 = file("../../$REPO_NAME/pom.xml")
+        List<String> lines = f2.readLines()
+        println(lines.toString())
+        StringBuffer newLines = new StringBuffer()
+        if (!lines.contains("<artifactId>android-maven-plugin</artifactId>")) {
+            lines.each {
+                newLines.append(it).append("\n")
+                if (it.contains("<packaging>aar</packaging>")) {
+                    newLines.append(plugin).append("\n")
+                }
             }
-        }
-        println("----------------")
-        String xml = newLines.toString()
-        f2.withWriter { writer ->
-            writer.write(xml)
+            println("----------------")
+            String xml = newLines.toString()
+            f2.withWriter { writer ->
+                writer.write(xml)
+            }
         }
     }
 }
 // 执行任务后 取repo目录上传github 打tag 发布jitpack
-tasks.register("createJitPackYml") {
-    dependsOn "mvPom"
+tasks.register("createJitPackYml", Task.class) {
     group = "mavenRepo"
     description = "创建jitpack.yaml文件"
-    String yml = '''install:
+    // 添加依赖
+    dependsOn(tasks.named("mvPom"))
+    doLast {
+        String yml = '''install:
   - FILE="-Dfile=''' + ARTIFACT_ID + '''-''' + VERSION_NAME + '''.aar"
   - mvn install:install-file $FILE -DgroupId=''' + GROUP_ID + ''' -DartifactId=''' + ARTIFACT_ID + ''' -Dversion=''' + VERSION_NAME + ''' -Dpackaging=aar -DpomFile=pom.xml'''
-    File f = file("../../$REPO_NAME/jitpack.yml")
-    if (f.exists()) {
-        f.delete()
+        File f = file("../../$REPO_NAME/jitpack.yml")
+        if (f.exists()) {
+            f.delete()
+        }
+//    f.createNewFile()
+        f.write(yml, "UTF-8")
     }
-    f.write(yml, "UTF-8")
 }

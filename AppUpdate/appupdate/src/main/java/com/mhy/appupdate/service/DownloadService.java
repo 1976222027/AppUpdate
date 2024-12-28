@@ -25,7 +25,8 @@ import com.mhy.appupdate.notify.INotification;
 import com.mhy.appupdate.notify.NotificationImpl;
 import com.mhy.appupdate.util.AppUtils;
 import com.mhy.appupdate.util.LogUtils;
-import com.mhy.hyappupdate.R;
+import com.mhy.appupdate.R;
+
 
 /**
  * 下载服务

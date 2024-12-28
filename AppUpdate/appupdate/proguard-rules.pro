@@ -26,6 +26,7 @@
 -keep class com.mhy.appupdate.AppUpdater$Builder { *; }
 # service
 -keep class com.mhy.appupdate.service.DownloadService { *; }
+-keep class com.mhy.appupdate.service.SystemDownload { *; }
 # FileProvider
 -keep class com.mhy.appupdate.provider.DownloadFileProvider { *; }
 # 接口
@@ -37,3 +38,4 @@
 -keepclasseswithmembernames class * {
     native <methods>;
 }
+# 这个文件是自己打包执行的混淆规则

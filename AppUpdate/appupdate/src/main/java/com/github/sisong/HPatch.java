@@ -58,10 +58,10 @@ public class HPatch {
     public void patchApk(String oldFileName, String diffFileName, String outNewFileName, PatchCallback callback) {
         if (!init) throw new RuntimeException("please call initSo() first");
         LogUtils.e(oldFileName+","+diffFileName+","+outNewFileName);
-        FutureTask<Integer> task = new FutureTask<Integer>(new Callable<Integer>() {
+        FutureTask<Integer> task = new FutureTask<>(new Callable<Integer>() {
             @Override
             public Integer call() {
-                return patch(oldFileName, diffFileName, outNewFileName);
+                return patch(oldFileName, diffFileName, outNewFileName, -1);
             }
 
         });
@@ -72,6 +72,11 @@ public class HPatch {
             e.printStackTrace();
         }
     }
+
+    /**
+     * 合并补丁方法
+     * @return 0 成功
+     */
 
     //patch:
     //  return THPatchResult, 0 is ok
@@ -85,11 +90,4 @@ public class HPatch {
 
     private static native int patch(String oldFileName, String diffFileName, String outNewFileName, long cacheMemory);
 
-    /**
-     * 合并补丁方法
-     * @return 0 成功
-     */
-    private static int patch(String oldFileName, String diffFileName, String outNewFileName) {
-        return patch(oldFileName, diffFileName, outNewFileName, -1);
-    }
 }

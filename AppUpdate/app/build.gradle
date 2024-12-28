@@ -10,8 +10,8 @@ android {
         applicationId "com.mhy.appupdate"
         minSdk 16
         targetSdk 34
-        versionCode 6
-        versionName "1.6"
+        versionCode 5
+        versionName "1.5"
 
     }
     signingConfigs {
@@ -43,7 +43,7 @@ dependencies {
     implementation libs.appcompat
     implementation libs.okhttp3.okhttp
     implementation libs.com.google.gson
-//    implementation 'com.mhy:appupdate:0.0.1' //local
+//    implementation 'com.mhy:appupdate:0.0.2' //local
 //    implementation 'com.gitee.mahongyin:appupdate-aar:0.0.1'
     implementation project(":appupdate")
 }

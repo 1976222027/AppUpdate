@@ -27,7 +27,7 @@ public class SystemDownload {
     private long mTaskId;
     private String downloadPath;
     private String versionName;
-    private String tag = "littonishir";
+    private String tag = "AppUpdater";
 
     public SystemDownload(Context context) {
         this.mContext = context;
