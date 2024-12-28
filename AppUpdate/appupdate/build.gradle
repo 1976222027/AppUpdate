@@ -40,7 +40,7 @@ dependencies {
     //implementation libs.getkeepsafe.relinker
     compileOnly libs.appcompat
 }
-def VERSION_NAME = '0.0.2'
+def VERSION_NAME = '0.0.3'
 def GROUP_ID = 'com.mhy'
 def ARTIFACT_ID = "appupdate"//project.getName()
 def REPO_PACK = "com/mhy/appupdate/$VERSION_NAME"
@@ -147,13 +147,13 @@ tasks.register("mvPom", Task.class) {
     doLast {
         String path = "../../" + REPO_NAME + "/" + REPO_PACK + "/" + ARTIFACT_ID + "-" + VERSION_NAME
         println(path)
-        if (file(path + ".aar").exists()) {
-            file("../../$REPO_NAME/").listFiles().each {
-                println(it)
-                if (it.isFile() && !it.name.endsWith(".aar")) {
-                    it.delete()
-                }
+        file("../../$REPO_NAME").listFiles().each {
+            if (it.isFile() && it.name.endsWith(".aar")) {
+                println("REPO_NAME"+it)
+                it.delete()
             }
+        }
+        if (file(path + ".aar").exists()) {
             copy {
                 from path + ".aar"
                 into "../../$REPO_NAME/"
