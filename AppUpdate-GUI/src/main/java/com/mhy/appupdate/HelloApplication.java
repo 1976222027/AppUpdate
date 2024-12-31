@@ -353,7 +353,7 @@ public class HelloApplication extends Application {
                             cmd.add(textFieldOld.getText());//旧版本
                             cmd.add(textFieldNew.getText());//新版本
 //                            cmd.add("out/dits/" + newVersionName + "/" + oldVersionName + "_" + newVersionName + "_apk.patch");//差分包名称
-                            cmd.add("out/" + newAppName + "/" + newVersionName + "/" + oldVersionName + "_" + newVersionName + "_apk.patch");//差分包名称
+                            cmd.add("out/" + newAppName + "/" + newVersionName + "/app_" + oldVersionName + "_" + newVersionName + "_apk.patch");//差分包名称
                             commandStart(cmd, info, progress);
                         }
                     } else {//只有新包

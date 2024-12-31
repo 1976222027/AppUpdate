@@ -167,9 +167,10 @@ static def isWindows() {
 }
 
 /**
+ * 先clean一下
  * 编译jar包+配置文件+运行脚本 都导出到 out/libs
  */
-task sources2Jar(type: Copy, dependsOn: ['shadowJar', 'createTextFile']) {
+task sources2Jar(type: Copy, dependsOn: ['clean', 'shadowJar', 'createTextFile']) {
     //把jar拷贝到out/libs
     from('build/libs/')
     into('out/libs')
