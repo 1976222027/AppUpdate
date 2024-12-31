@@ -50,18 +50,18 @@ public class HPatch {
     /**
      * 外部调用合并补丁方法
      *
-     * @param oldFileName    旧文件
-     * @param diffFileName   差分补丁
-     * @param outNewFileName 新文件目标
+     * @param oldFile    旧文件
+     * @param diffFile   差分补丁
+     * @param outNewFile 新文件目标
      * @param callback       回调
      */
-    public void patchApk(String oldFileName, String diffFileName, String outNewFileName, PatchCallback callback) {
+    public void patchApk(String oldFile, String diffFile, String outNewFile, PatchCallback callback) {
         if (!init) throw new RuntimeException("please call initSo() first");
-        LogUtils.e(oldFileName+","+diffFileName+","+outNewFileName);
+        LogUtils.d(oldFile+",\n"+diffFile+",\n"+outNewFile);
         FutureTask<Integer> task = new FutureTask<>(new Callable<Integer>() {
             @Override
             public Integer call() {
-                return patch(oldFileName, diffFileName, outNewFileName, -1);
+                return patch(oldFile, diffFile, outNewFile, -1);
             }
 
         });

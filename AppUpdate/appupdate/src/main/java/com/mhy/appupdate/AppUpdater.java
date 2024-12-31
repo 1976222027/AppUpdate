@@ -245,7 +245,6 @@ public class AppUpdater {
          * 设置保存的路径，（建议使用默认，不做设置）
          *
          * @param path 下载保存的文件路径
-         * @return
          * @deprecated 因为适配Android Q的分区存储，所以此方法已弃用，不建议再使用
          */
         @Deprecated
@@ -256,7 +255,6 @@ public class AppUpdater {
 
         /**
          * 设置保存的文件名
-         *
          * @param filename 下载的保存的apk文件名（默认优先取url文件名）
          */
         public Builder setSaveFilename(String filename) {
@@ -266,7 +264,6 @@ public class AppUpdater {
 
         /**
          * 设置是否显示通知栏
-         *
          * @param isShowNotification 是否显示通知栏（默认true）
          */
         public Builder setShowNotification(boolean isShowNotification) {
@@ -276,7 +273,6 @@ public class AppUpdater {
 
         /**
          * 设置通知ID
-         *
          * @param notificationId 通知ID
          */
         public Builder setNotificationId(int notificationId) {
@@ -286,7 +282,6 @@ public class AppUpdater {
 
         /**
          * 设置通知通道ID
-         *
          * @param channelId 通知通道ID（默认兼容O）
          */
         public Builder setChannelId(String channelId) {
@@ -296,7 +291,6 @@ public class AppUpdater {
 
         /**
          * 设置通知通道名称
-         *
          * @param channelName 通知通道名称（默认兼容O）
          */
         public Builder setChannelName(String channelName) {
@@ -306,7 +300,6 @@ public class AppUpdater {
 
         /**
          * 设置通知图标
-         *
          * @param icon 通知栏图标（默认取App的icon）
          */
         public Builder setNotificationIcon(@DrawableRes int icon) {
@@ -316,7 +309,6 @@ public class AppUpdater {
 
         /**
          * 设置通知是否震动提示
-         *
          * @param vibrate 是否震动提示，为true时使用通知默认震动，Android O(8.0)以上设置，只有初次创建channel时有效，后续修改属性无效，想要重新有效需修改channelId或卸载App重装。
          */
         public Builder setVibrate(boolean vibrate) {
@@ -326,7 +318,6 @@ public class AppUpdater {
 
         /**
          * 设置通知是否铃声提示
-         *
          * @param sound 是否铃声提示，为true时使用通知默认铃声，Android O(8.0)以上设置，只有初次创建channel时有效，后续修改属性无效，想要重新有效需修改channelId或卸载App重装。
          */
         public Builder setSound(boolean sound) {
@@ -337,7 +328,6 @@ public class AppUpdater {
 
         /**
          * 设置下载完成后知否自动触发安装APK
-         *
          * @param isInstallApk 下载完成后是否自动调用安装APK（默认true）
          */
         public Builder setInstallApk(boolean isInstallApk) {
@@ -347,7 +337,6 @@ public class AppUpdater {
 
         /**
          * 设置FileProvider的authority
-         *
          * @param authority FileProvider的authority（默认兼容N，默认值{@link Context#getPackageName() + ".AppUpdaterFileProvider"}）
          */
         public Builder setAuthority(String authority) {
@@ -357,7 +346,6 @@ public class AppUpdater {
 
         /**
          * 设置下载时，通知栏是否显示下载百分比
-         *
          * @param showPercentage 下载时通知栏是否显示百分比
          */
         public Builder setShowPercentage(boolean showPercentage) {
@@ -367,7 +355,6 @@ public class AppUpdater {
 
         /**
          * 设置下载失败时，是否支持点击通知栏重新下载。与之相关联的方法{@link #setReDownloads(int)}
-         *
          * @param reDownload 下载失败时是否支持点击通知栏重新下载，默认true
          */
         public Builder setReDownload(boolean reDownload) {
@@ -377,7 +364,6 @@ public class AppUpdater {
 
         /**
          * 设置下载失败时，最多重新下载次数。与之相关联的方法{@link #setReDownload(boolean)}
-         *
          * @param reDownloads 下载失败时是否支持点击通知栏重新下载，默认最多重新下载3次
          */
         public Builder setReDownloads(int reDownloads) {
@@ -389,7 +375,6 @@ public class AppUpdater {
          * 设置要下载APK的versionCode，用于优先取缓存时通过versionCode校验APK文件是否一致。
          * 缓存校验目前支持两种方式，一种是通过versionCode校验，即{@link #setVersionCode(long)}；一种是文件MD5校验，即{@link #setApkMD5(String)}。推荐使用MD5校验方式
          * 如果两种方式都设置了，则只校验MD5
-         *
          * @param versionCode 为null表示不处理，默认不存在则下载，存在则重新下载。不为null时，表示会优先校验本地是否存在已下载版本号为versionCode的APK。
          *                    如果存在则不会重新下载(AppUpdater会自动校验packageName一致性)，直接取本地APK，反之重新下载。
          */
@@ -413,7 +398,6 @@ public class AppUpdater {
 
         /**
          * 请求头添加参数
-         *
          * @param headers 请求头参数
          */
         public Builder addHeader(Map<String, String> headers) {
@@ -423,7 +407,6 @@ public class AppUpdater {
 
         /**
          * 设置是否自动删除取消下载的文件
-         *
          * @param deleteCancelFile 是否删除取消下载的文件（默认为true）
          */
         public Builder setDeleteCancelFile(boolean deleteCancelFile) {
@@ -433,9 +416,7 @@ public class AppUpdater {
 
         /**
          * 是否支持通过删除通知栏来取消下载（默认为：false）
-         *
          * @param supportCancelDownload
-         * @return
          */
         public Builder setSupportNotifyCancelDownload(boolean supportCancelDownload) {
             mConfig.setSupportNotifyCancelDownload(supportCancelDownload);
@@ -444,7 +425,6 @@ public class AppUpdater {
 
         /**
          * 构建 AppUpdater
-         *
          * @return {@link AppUpdater}
          */
         public AppUpdater build() {

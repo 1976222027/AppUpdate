@@ -33,7 +33,8 @@
 -keep interface com.mhy.appupdate.listener.* { *; }
 -keep interface com.mhy.appupdate.http.* { *; }
 -keep interface com.mhy.appupdate.notify.* { *; }
--keep class com.mhy.appupdate.util.*  { *; }
+#-keep class com.mhy.appupdate.util.*  { *; }
+-keep class com.mhy.appupdate.util.LogUtils  { *; }
 # 保留native方法
 -keepclasseswithmembernames class * {
     native <methods>;

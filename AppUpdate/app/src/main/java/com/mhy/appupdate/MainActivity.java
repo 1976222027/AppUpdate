@@ -1,5 +1,7 @@
 package com.mhy.appupdate;
 
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -11,8 +13,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.gson.Gson;
+import com.mhy.appupdate.http.OkHttpManager;
 import com.mhy.appupdate.listener.UpdateCallback;
-import com.mhy.appupdate.util.AppUtils;
+import com.mhy.appupdate.service.SystemDownload;
 import com.mhy.appupdate.util.LogUtils;
 
 import java.io.File;
@@ -71,7 +74,26 @@ public class MainActivity extends AppCompatActivity {
                     public Void invoke(String data) {
                         LogUtils.i("请求结果==" + data);
                         textView.setText(data);
-                        downloadApk(data);
+                        Gson gson = new Gson();
+                        UpdateInfo updateInfo = gson.fromJson(data, UpdateInfo.class);
+                        if (updateInfo.getCode() == 0) {
+//                            downloadApk(updateInfo);//自定义下载
+//                            SystemDownload.getInstance(MainActivity.this).downloadByBrowser(updateInfo.getData().getApkUrl());
+                            try {
+                                PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+                                String url = "";
+                                UpdateInfo.DataDTO.PatchInfoDTO patch = updateInfo.getData().getPatchInfo().get(packageInfo.versionName);
+                                String newVer = updateInfo.getData().getNewVersionName();
+                                if (patch != null && !TextUtils.isEmpty(patch.getPatchUrl())) {
+                                    url = patch.getPatchUrl();
+                                    SystemDownload.getInstance(MainActivity.this).downloadPatch(url, newVer);
+                                } else {
+                                    url = updateInfo.getData().getApkUrl();
+                                    SystemDownload.getInstance(MainActivity.this).downloadAPK(url, newVer);
+                                }
+                            } catch (Exception ignored) {
+                            }
+                        }
                         return null;
                     }
                 });
@@ -80,78 +102,76 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void downloadApk(String data) {
+    private void downloadApk(UpdateInfo updateInfo) {
         try {
-            Gson gson = new Gson();
-            UpdateInfo updateInfo = gson.fromJson(data, UpdateInfo.class);
-            if (updateInfo.getCode() == 0) {
-                UpdateInfo.DataDTO dataDTO = updateInfo.getData();
-                UpdateInfo.DataDTO.PatchInfoDTO patchInfo = dataDTO.getPatchInfo().get(AppUtils.getPackageInfo(MainActivity.this).versionName);
-                String patchUrl = "";
-                String patchMd5 = "";
-                long patchSize = 0;
-                if (patchInfo != null) {
-                    patchUrl = patchInfo.getPatchUrl();
-                    patchSize = patchInfo.getPatchSize();
-                    patchMd5 = patchInfo.getPatchHash();
-                }
-                mAppUpdater = new AppUpdater.Builder(MainActivity.this)
-                        .setApkUrl(dataDTO.getApkUrl())
-                        .setApkMD5(dataDTO.getApkHash())
-                        .setApkSize(dataDTO.getApkSize())
-                        .setPatchUrl(patchUrl)
-                        .setPatchMD5(patchMd5)
-                        .setPatchSize(patchSize)
-                        .setVersionCode(dataDTO.getNewVersionCode())
-                        .setVersionName(dataDTO.getNewVersionName())
-                        .setSaveFilename("new.apk")
-                        .build();
-
-                mAppUpdater.setUpdateCallback(new UpdateCallback() {
-                    @Override
-                    public void onDownloading(boolean isDownloading) {
-                        if (isDownloading) {
-                            LogUtils.i("已经在下载中,请勿重复下载。");
-                            textView.setText("已经在下载中,请勿重复下载。");
-                        } else {
-                            LogUtils.i("开始下载…");
-                            textView.setText("开始下载…");
-                        }
-                    }
-
-                    @Override
-                    public void onStart(String url) {
-
-                    }
-
-                    @Override
-                    public void onProgress(long progress, long total, boolean isChanged) {
-                        if (isChanged) {
-                            LogUtils.i(progress + "/" + total);
-                            progressBar.setProgress((int) (progress * 1.0f / total * 100.0f));
-                        }
-                    }
-
-                    @Override
-                    public void onFinish(File file) {
-                        LogUtils.i("下载完成");
-                        textView.setText("下载完成");
-                    }
-
-                    @Override
-                    public void onError(Exception e) {
-                        LogUtils.i("下载失败");
-                        textView.setText("下载失败");
-                    }
-
-                    @Override
-                    public void onCancel() {
-                        LogUtils.i("取消下载");
-                        textView.setText("取消下载");
-                    }
-                });
-                mAppUpdater.start();
+            UpdateInfo.DataDTO dataDTO = updateInfo.getData();
+            PackageManager packageManager = getPackageManager();
+            PackageInfo packageInfo = packageManager.getPackageInfo(getPackageName(), 0);
+            UpdateInfo.DataDTO.PatchInfoDTO patchInfo = dataDTO.getPatchInfo().get(packageInfo.versionName);
+            String patchUrl = "";
+            String patchMd5 = "";
+            long patchSize = 0;
+            if (patchInfo != null) {
+                patchUrl = patchInfo.getPatchUrl();
+                patchSize = patchInfo.getPatchSize();
+                patchMd5 = patchInfo.getPatchHash();
             }
+            mAppUpdater = new AppUpdater.Builder(MainActivity.this)
+                    .setApkUrl(dataDTO.getApkUrl())
+                    .setApkMD5(dataDTO.getApkHash())
+                    .setApkSize(dataDTO.getApkSize())
+                    .setPatchUrl(patchUrl)
+                    .setPatchMD5(patchMd5)
+                    .setPatchSize(patchSize)
+                    .setVersionCode(dataDTO.getNewVersionCode())
+                    .setVersionName(dataDTO.getNewVersionName())
+                    .setSaveFilename("app_" + dataDTO.getNewVersionName() + ".apk")
+                    .build();
+            mAppUpdater.setHttpManager(OkHttpManager.getInstance());
+            mAppUpdater.setUpdateCallback(new UpdateCallback() {
+                @Override
+                public void onDownloading(boolean isDownloading) {
+                    if (isDownloading) {
+                        LogUtils.i("已经在下载中,请勿重复下载。");
+                        textView.setText("已经在下载中,请勿重复下载。");
+                    } else {
+                        LogUtils.i("开始下载…");
+                        textView.setText("开始下载…");
+                    }
+                }
+
+                @Override
+                public void onStart(String url) {
+
+                }
+
+                @Override
+                public void onProgress(long progress, long total, boolean isChanged) {
+                    if (isChanged) {
+                        LogUtils.i(progress + "/" + total);
+                        progressBar.setProgress((int) (progress * 1.0f / total * 100.0f));
+                    }
+                }
+
+                @Override
+                public void onFinish(File file) {
+                    LogUtils.i("下载完成");
+                    textView.setText("下载完成");
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    LogUtils.i("下载失败");
+                    textView.setText("下载失败");
+                }
+
+                @Override
+                public void onCancel() {
+                    LogUtils.i("取消下载");
+                    textView.setText("取消下载");
+                }
+            });
+            mAppUpdater.start();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -197,18 +217,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
     }
 }

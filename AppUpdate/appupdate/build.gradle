@@ -40,7 +40,7 @@ dependencies {
     //implementation libs.getkeepsafe.relinker
     compileOnly libs.appcompat
 }
-def VERSION_NAME = '0.0.3'
+def VERSION_NAME = '0.0.5'
 def GROUP_ID = 'com.mhy'
 def ARTIFACT_ID = "appupdate"//project.getName()
 def REPO_PACK = "com/mhy/appupdate/$VERSION_NAME"

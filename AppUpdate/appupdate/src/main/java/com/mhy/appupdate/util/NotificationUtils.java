@@ -92,6 +92,7 @@ public class NotificationUtils {
         if (isSupportCancelDownload) {
             Intent intent = new Intent(context, DownloadService.class);
             intent.putExtra(Constants.KEY_STOP_DOWNLOAD_SERVICE, true);
+            //sdk 34 exported为false的 只能显式意图
             PendingIntent deleteIntent = PendingIntent.getService(context, notifyId, intent, getPendingIntentFlags(PendingIntent.FLAG_CANCEL_CURRENT));
             builder.setDeleteIntent(deleteIntent);
         }

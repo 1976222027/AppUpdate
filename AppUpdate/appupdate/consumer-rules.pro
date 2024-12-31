@@ -8,9 +8,9 @@
 # FileProvider
 -keep class com.mhy.appupdate.provider.DownloadFileProvider { *; }
 # 接口
-#-keep interface com.mhy.appupdate.listener.* { *; }
-#-keep interface com.mhy.appupdate.http.* { *; }
-#-keep interface com.mhy.appupdate.notify.* { *; }
+-keep interface com.mhy.appupdate.listener.* { *; }
+-keep interface com.mhy.appupdate.http.* { *; }
+-keep interface com.mhy.appupdate.notify.* { *; }
 #-keep class com.mhy.appupdate.util.*  { *; }
 # 保留native方法
 -keepclasseswithmembernames class * {
