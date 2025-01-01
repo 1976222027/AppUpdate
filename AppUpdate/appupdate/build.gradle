@@ -40,7 +40,7 @@ dependencies {
     //implementation libs.getkeepsafe.relinker
     compileOnly libs.appcompat
 }
-def VERSION_NAME = '0.0.5'
+def VERSION_NAME = '1.3'
 def GROUP_ID = 'com.mhy'
 def ARTIFACT_ID = "appupdate"//project.getName()
 def REPO_PACK = "com/mhy/appupdate/$VERSION_NAME"
@@ -172,7 +172,7 @@ tasks.register("mvPom", Task.class) {
         // $HOME/.m2/repository 等标准目录下，所以 jitpack 找不到了。不过，可以给 pom 文件中声明构建时使用
         // android-maven-plugin 插件来解决：
         // 改pom
-        String plugin = """<build>
+        String plugin = """  <build>
     <plugins>
       <plugin>
         <groupId>com.simpligility.maven.plugins</groupId>
