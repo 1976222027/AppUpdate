@@ -1,9 +1,24 @@
 package com.mhy.utils;
 
+import com.meituan.android.walle.ChannelInfo;
+import com.meituan.android.walle.ChannelReader;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+
 import net.dongliu.apk.parser.ApkFile;
 import net.dongliu.apk.parser.bean.ApkMeta;
 
-import java.io.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.zip.ZipEntry;
@@ -186,6 +201,59 @@ public class ApkUtil {
         } catch (Exception e) {
             return "";
         }
+    }
+
+
+    public static String getChannel(String apkPath) {
+        return getChannel(apkPath, "");
+    }
+
+    /**
+     * get channel or default
+     *
+     * @param defaultChannel default channel
+     * @return channel, default if not fount
+     */
+
+    public static String getChannel(String apkPath, final String defaultChannel) {
+        final ChannelInfo channelInfo = getChannelInfo(apkPath);
+        if (channelInfo == null) {
+            return defaultChannel;
+        }
+        return channelInfo.getChannel();
+    }
+
+    /**
+     * get channel info (include channle & extraInfo)
+     *
+     * @return channel info
+     */
+
+    public static ChannelInfo getChannelInfo(String apkPath) {
+        return ChannelReader.get(new File(apkPath));
+    }
+
+    /**
+     * get value by key
+     *
+     * @param key the key you store
+     * @return value
+     */
+
+    public static String get(String apkPath, final String key) {
+        final Map<String, String> channelMap = getChannelInfoMap(apkPath);
+        if (channelMap == null) {
+            return null;
+        }
+        return channelMap.get(key);
+    }
+
+    /**
+     * get all channl info with map
+     */
+
+    public static Map<String, String> getChannelInfoMap(String apkPath) {
+        return ChannelReader.getMap(new File(apkPath));
     }
 
 }

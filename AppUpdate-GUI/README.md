@@ -90,3 +90,16 @@ $hdiffz -m-6 -SD -c-zstd-21-24 -d oldPath newPath outDiffFile
 打补丁:
 $hpatchz oldPath diffFile outNewPath
 
+#### 报错记录
+1.Process ‘command ‘E:/java11/bin/java.exe‘‘ finished with non-zero exit value 1错误解决
+把build and run using 改为Intellij IDEA
+![](out/Build.jpg))
+
+2.IDEA out目录下多出一个production
+‌修改编译输出目录‌：
+打开IDEA，进入“File”菜单，选择“Project Structure”。
+在“Project”选项卡中，可以设置项目的编译输出目录。默认情况下，编译输出目录可能设置为“out/production”。
+在“Modules”选项卡中，可以设置特定模块的编译输出目录。选择相应的模块，然后在“Paths/路径”选项中选择“继承项目编译路径”或“Use module compile output path”，并设置“Output path”为你希望的目录‌
+‌排除特定目录‌：
+在IDEA中，可以通过项目结构设置来排除特定的目录。进入“Project Structure”，选择“Modules”，然后选择你的项目或模块。
+在“Sources”标签中，可以添加或移除源码文件夹。如果不想让IDEA包含某些目录（如out目录），可以将这些目录设置为“Excluded”‌

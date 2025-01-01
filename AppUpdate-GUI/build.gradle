@@ -7,11 +7,16 @@ import java.time.format.DateTimeFormatter
 // 放plugins前
 buildscript {
     repositories {
+        maven { url 'https://maven.aliyun.com/nexus/content/repositories/gradle-plugin' }
+        maven { url 'https://maven.aliyun.com/nexus/content/groups/public' }
         maven { url 'https://mirrors.tencent.com/nexus/repository/maven-public' }
-        maven { url 'https://maven.aliyun.com/repository/central' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        mavenCentral()
     }
+//    dependencies {
+//        classpath
+//    }
 }
-
 plugins {
     //    id 'java'
     /**
@@ -61,7 +66,8 @@ javafx {
 }
 //放sourceCompatibility前
 repositories {
-    maven { url 'https://maven.aliyun.com/repository/central' }
+    maven { url 'https://maven.aliyun.com/nexus/content/groups/public' }
+    maven { url 'https://maven.aliyun.com/repository/public' }
     mavenCentral()
 }
 
@@ -76,6 +82,10 @@ dependencies {
     implementation 'com.alibaba.fastjson2:fastjson2:2.0.52'
     //md5
     //implementation 'commons-codec:commons-codec:1.17.1'
+//    美团多渠道
+    implementation 'com.meituan.android.walle:payload_reader:1.1.7'
+    // https://mvnrepository.com/artifact/org.json/json
+    implementation 'org.json:json:20230618'//美团依赖这个 android自带 / 20240303
 }
 
 tasks.withType(JavaCompile) {

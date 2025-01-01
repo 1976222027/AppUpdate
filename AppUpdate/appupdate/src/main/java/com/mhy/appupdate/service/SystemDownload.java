@@ -208,7 +208,7 @@ public class SystemDownload {
             if (!file.exists()) {
                 downloadPath = AppUtils.getPhotoPathFromContentUri(mContext, downloadFileUri);
             }
-            HPatch.getInstance().patchApk(mContext.getPackageCodePath(),
+            HPatch.getInstance().patchApk(AppUtils.getApkPath(mContext),
                     downloadPath, newApk.getAbsolutePath(), new HPatch.PatchCallback() {
                         @Override
                         public void onPatchResult(boolean success) {

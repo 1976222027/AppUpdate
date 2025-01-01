@@ -405,9 +405,9 @@ public class DownloadService extends Service {
                     savePath = file.getParent();
                 }
                 //获取当前安装包的路径
-                File oldApk = new File(context.getPackageCodePath());
+                String oldApk = AppUtils.getApkPath(context);
                 File newApk = new File(savePath, apkName);
-                HPatch.getInstance().patchApk(oldApk.getAbsolutePath(), file.getAbsolutePath(), newApk.getAbsolutePath(), new HPatch.PatchCallback() {
+                HPatch.getInstance().patchApk(oldApk, file.getAbsolutePath(), newApk.getAbsolutePath(), new HPatch.PatchCallback() {
                     @Override
                     public void onPatchResult(boolean success) {
                         if (success){

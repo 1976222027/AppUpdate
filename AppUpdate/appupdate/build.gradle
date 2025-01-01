@@ -229,3 +229,10 @@ tasks.register("createJitPackYml", Task.class) {
         f.write(yml, "UTF-8")
     }
 }
+// 然后进入 appupdate-aar
+//git add .
+//git commit -m "update"
+//git push
+//git tag 0.0.5
+//git push --tag
+//去gitee发布，再去jitpack 构建

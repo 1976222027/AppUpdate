@@ -1,8 +1,9 @@
 <?php
-//127.0.0.1/update/index.php?version=0&appkey=com.app.app
+//127.0.0.1/update/index.php?version=0&channel=xiaomi&appkey=com.app.app
 header('Content-type:text/html;charset=utf-8');
 $appVersionCode = $_GET['version'];
 $appkey = $_GET['appkey'];
+$channel = $_GET['channel']; //根据渠道区分apk/补丁
 //把unicode转化成中文
 function decodeUnicode($str)
 {
@@ -31,26 +32,26 @@ function getMsg($data, $appVersionCode)
 	if ($appVersionCode != null && $appVersionCode >= $versionCode) {
 		error("已经是最新版本");
 	} else {
-		$minVersion = $data["minVersion"];
-		$autoUpdate = $data["autoUpdate"];
-		$updateStatus = 0; //-1不升级,0普通升级，1须要强制升级. 2静默 3增量
-		if ($autoUpdate) {
-			$updateStatus = 2;
-		}
-		if ($appVersionCode != null && $appVersionCode < $minVersion) { //小于最小版本要强制更新
-			$updateStatus = 1;
-		}
-		$enableUpdate = $data["enableUpdate"];
-		if (!$enableUpdate) {
-			$updateStatus = -1;
-		}
+		// $minVersion = $data["minVersion"];
+		// $autoUpdate = $data["autoUpdate"];
+		// $updateStatus = 0; //-1不升级,0普通升级，1须要强制升级. 2静默 3增量
+		// if ($autoUpdate) {
+		// 	$updateStatus = 2;
+		// }
+		// if ($appVersionCode != null && $appVersionCode < $minVersion) { //小于最小版本要强制更新
+		// 	$updateStatus = 1;
+		// }
+		// $enableUpdate = $data["enableUpdate"];
+		// if (!$enableUpdate) {
+		// 	$updateStatus = -1;
+		// }
 
-		$versionName = $data["newVersionName"];
-		$apkUrl = $data["apkUrl"];
-		$apkMd5 = $data["apkHash"];
-		$apkSize = $data["apkSize"];
-		$mTitle = $data["title"];
-		$contentMsg = $data["message"];
+		// $versionName = $data["newVersionName"];
+		// $apkUrl = $data["apkUrl"];
+		// $apkMd5 = $data["apkHash"];
+		// $apkSize = $data["apkSize"];
+		// $mTitle = $data["title"];
+		// $contentMsg = $data["message"];
 
 		// $msg = array(
 		// 	"Title" => $mTitle,
@@ -63,11 +64,14 @@ function getMsg($data, $appVersionCode)
 		// 	"ApkMd5" => $apkMd5
 		// ); //md5值没有的话，就没法保证apk是否完整，每次都会从新下载。
 
-		success($data);//$msg
+		success($data); //$msg
 	}
 }
-
+// 读取json文件
 $file = './updateVersion.json';
+if ($channel != null) {
+	$file = "./".$channel."/updateVersion.json";
+}
 if (file_exists($file)) {
 	$jsonString = file_get_contents($file);
 	$data = json_decode($jsonString, true); // 注意，第二个参数为true，将返回一个数组，而不是一个对象

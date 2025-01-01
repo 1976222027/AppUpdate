@@ -16,7 +16,6 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import javafx.application.Application;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -26,7 +25,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Background;
@@ -78,6 +76,12 @@ public class HelloApplication extends Application {
      */
     private static Boolean autoUpdate = null;
 
+    private static String channelNew = "";
+    private static String channelOld = "";
+
+    /**
+     * 可滚动
+     */
     public static void dragFile(Stage primaryStage) {
         Label label = new Label("拖拽新版本apk到这里 或 ");
         TextField textFieldNew = new TextField();
@@ -145,10 +149,12 @@ public class HelloApplication extends Application {
         if (autoUpdate == null) {
             autoUpdate = false;
         }
+
         TextArea textField5 = new TextArea();
         textField5.setPrefRowCount(2);
         textField5.setText(upPatchUrl);
         HBox chbox = new HBox();
+
         CheckBox cbox = new CheckBox("启用升级功能");
         cbox.setPadding(new Insets(5));
         cbox.setSelected(enableUpdate);
@@ -161,7 +167,7 @@ public class HelloApplication extends Application {
         cbox2.selectedProperty().addListener((obs, oldValue, newValue) -> {
             autoUpdate = newValue;
         });
-        chbox.getChildren().addAll(cbox,cbox2);
+        chbox.getChildren().addAll(cbox, cbox2);
         Button update = new Button("2.创建升级清单文件");
         update.setTextFill(Color.WHITE);
         update.setBackground(new Background(new BackgroundFill(Color.GREEN, new CornerRadii(8), null)));
@@ -188,6 +194,9 @@ public class HelloApplication extends Application {
         //创建清单按钮
         update.setOnMouseClicked(event -> {
             if (newVersionName != null && !newVersionName.isEmpty()) {
+                if (!channelOld.equals(channelNew)) {
+                    ToastUtil.toast("注意新旧版本渠道不一致。");
+                }
                 ToastUtil.toast("开始创建升级清单文件");
                 upTitle = textField1.getText();
                 upMessage = textField2.getText();
@@ -245,11 +254,20 @@ public class HelloApplication extends Application {
                         }
                     }
                 }
+
                 //生成更新表单，给前端使用
 //                JsonUtil.createJsonFile(updateInfo, "out/dits/" + newVersionName + "/updateVersion.json");
-                JsonUtil.createJsonFile(updateInfo, "out/" + newAppName + "/" + newVersionName + "/updateVersion.json");
+                if (channelNew.isEmpty()) {
+                    JsonUtil.createJsonFile(updateInfo, "out/" + newAppName + "/" + newVersionName + "/updateVersion.json");
+                } else {
+                    File newVer = new File("out/" + newAppName + "/" + newVersionName + "/" + channelNew);
+                    if (!newVer.exists()) {
+                        newVer.mkdirs();
+                    }
+                    JsonUtil.createJsonFile(updateInfo, "out/" + newAppName + "/" + newVersionName + "/" + channelNew + "/" + "/updateVersion.json");
+                }
                 //保存配置文件
-                ApkUtil.writeFile(JSONObject.toJSONString(config), new File( "config.json"));
+                ApkUtil.writeFile(JSONObject.toJSONString(config), new File("config.json"));
                 ToastUtil.toast("创建完成");
             } else {
                 ToastUtil.toast("请先完成->1.获取包信息");
@@ -270,34 +288,31 @@ public class HelloApplication extends Application {
         TextField labelNew = new TextField();
         labelNew.setEditable(false);
         labelNew.getStyleClass().add("copyablelabel");
-        hBox1.getChildren().addAll(label, btOpen, labelNew);
+
+        TextField labelNewChanel = new TextField();
+        labelNewChanel.setEditable(false);
+        labelNewChanel.getStyleClass().add("copyablelabel");
+
+        hBox1.getChildren().addAll(label, btOpen, labelNew, labelNewChanel);
+
         HBox hBox2 = new HBox();
         TextField labelOld = new TextField();
         labelOld.setEditable(false);
         labelOld.getStyleClass().add("copyablelabel");
-        hBox2.getChildren().addAll(label2, btOpen2, labelOld);
+
+        TextField labelOldChanel = new TextField();
+        labelOldChanel.setEditable(false);
+        labelOldChanel.getStyleClass().add("copyablelabel");
+
+        hBox2.getChildren().addAll(label2, btOpen2, labelOld, labelOldChanel);
+
         hBox2.setPadding(new Insets(16, 0, 0, 0));
         dragTarget.getChildren().addAll(hBox1, textFieldNew, hBox2, textFieldOld, vBox);
-        textFieldNew.setOnDragOver(new EventHandler<DragEvent>() {
-            @Override
-            public void handle(DragEvent event) {
-                if (event.getGestureSource() != dragTarget && event.getDragboard().hasFiles()) {
-                    event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
-                }
-                event.consume();
-            }
-        });
+
         // 拖拽监听
-        textOnDragDropped(textFieldNew);
-        //使用 DragEvent 事件处理器 可以在输入框的事件处理器中使用
-        textFieldOld.setOnDragOver(event -> {
-            if (event.getGestureSource() != dragTarget && event.getDragboard().hasFiles()) {
-                event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
-            }
-            event.consume();
-        });
+        textOnDragDropped(dragTarget, textFieldNew);
         // 拖拽监听
-        textOnDragDropped(textFieldOld);
+        textOnDragDropped(dragTarget, textFieldOld);
 
         StackPane root = new StackPane();
         //[获取包信息]生成差分包按钮，不制作差分包 不填旧包即可，但也要点一下生成差分包，用于产出新包md5
@@ -315,6 +330,8 @@ public class HelloApplication extends Application {
                     newVersionName = apkMetaNew.getVersionName();
                     newAppName = apkMetaNew.getName();//app名
                     labelNew.setText(" VersionCode: " + apkMetaNew.getVersionCode());
+                    channelNew = ApkUtil.getChannel(textFieldNew.getText());
+                    labelNewChanel.setText("" + channelNew);
                     //应用名作为目录
                     File dits = new File("out/" + newAppName + "/apkInfo");
                     if (!dits.exists()) {
@@ -336,6 +353,8 @@ public class HelloApplication extends Application {
                         if (apkMetaOld != null) {
                             String oldVersionName = apkMetaOld.getVersionName();
                             labelOld.setText(" VersionCode: " + apkMetaOld.getVersionCode());
+                            channelOld = ApkUtil.getChannel(textFieldOld.getText());
+                            labelOldChanel.setText("" + channelOld);
                             //制作补丁时旧版md5已保存
                             //String oldApkMd5 = ApkUtil.getFileMD5(textFieldOld.getText());
                             String jsonOld = JSONObject.toJSONString(apkMetaOld);
@@ -410,14 +429,22 @@ public class HelloApplication extends Application {
     /**
      * 拖拽监听
      */
-    private static void textOnDragDropped(TextField textFieldOld) {
-        textFieldOld.setOnDragDropped(event -> {
+    private static void textOnDragDropped(VBox dragTarget, TextField textField) {
+        //使用 DragEvent 事件处理器 可以在输入框的事件处理器中使用
+        textField.setOnDragOver(event -> {
+            if (event.getGestureSource() != dragTarget && event.getDragboard().hasFiles()) {
+                event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+            }
+            event.consume();
+        });
+        // 拖拽完
+        textField.setOnDragDropped(event -> {
             Dragboard db = event.getDragboard();
             boolean success = false;
             if (db.hasFiles()) {
                 List<File> files = db.getFiles();
                 for (File file : files) {
-                    textFieldOld.setText(file.getAbsolutePath());
+                    textField.setText(file.getAbsolutePath());
                 }
                 success = true;
             }

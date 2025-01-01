@@ -360,6 +360,12 @@ public final class AppUtils {
         return new File(context.getFilesDir(), Constants.DEFAULT_DIR).getAbsolutePath();
     }
 
+    public static String getApkPath(Context context) {
+        ApplicationInfo applicationInfo = context.getApplicationInfo();
+//    return context.getPackageCodePath();
+        return applicationInfo.sourceDir;
+    }
+
     /**
      * 获取真实路径
      */
