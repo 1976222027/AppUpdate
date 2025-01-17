@@ -14,6 +14,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Enumeration;
 import java.util.Map;
 
 import net.dongliu.apk.parser.ApkFile;
@@ -203,19 +204,46 @@ public class ApkUtil {
         }
     }
 
+    private static final String START_FLAG = "META-INF/channel_";
 
     public static String getChannel(String apkPath) {
         return getChannel(apkPath, "");
     }
 
-    /**
-     * get channel or default
-     *
+    /**获取渠道
+     * 先看是不是自定义渠道META-INF/channel_， 再看Walle 没有则返回默认
      * @param defaultChannel default channel
      * @return channel, default if not fount
      */
-
     public static String getChannel(String apkPath, final String defaultChannel) {
+        ZipFile zipfile = null;
+        try {
+            zipfile = new ZipFile(apkPath);
+            Enumeration<?> entries = zipfile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = ((ZipEntry) entries.nextElement());
+                String entryName = entry.getName();
+                if (entryName.contains(START_FLAG)) {
+                    return entryName.replaceAll(START_FLAG, "");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (zipfile != null) {
+                try {
+                    zipfile.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return getWalleChannel(apkPath, defaultChannel);
+    }
+
+    /************************  美团多渠道   *************************/
+
+    public static String getWalleChannel(String apkPath, final String defaultChannel) {
         final ChannelInfo channelInfo = getChannelInfo(apkPath);
         if (channelInfo == null) {
             return defaultChannel;

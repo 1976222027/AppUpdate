@@ -1,6 +1,6 @@
 下载，合并补丁，安装
 [![](https://jitpack.io/v/com.gitee.mahongyin/appupdate.svg)](https://jitpack.io/#com.gitee.mahongyin/appupdate)
-
+[![](https://jitpack.io/v/com.gitee.mahongyin/appupdate-aar.svg)](https://jitpack.io/#com.gitee.mahongyin/appupdate-aar)
 ```groovy
 implementation "com.gitee.mahongyin:appupdate-aar:1.3"
 

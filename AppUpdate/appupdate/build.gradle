@@ -239,5 +239,5 @@ tasks.register("createJitPackYml", Task.class) {
 //git commit -m "update"
 //git push
 //git tag 0.0.5
-//git push --tag
+//git push --tags
 //去gitee发布，再去jitpack 构建

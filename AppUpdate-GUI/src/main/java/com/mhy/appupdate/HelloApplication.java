@@ -331,6 +331,7 @@ public class HelloApplication extends Application {
                     newAppName = apkMetaNew.getName();//app名
                     labelNew.setText(" VersionCode: " + apkMetaNew.getVersionCode());
                     channelNew = ApkUtil.getChannel(textFieldNew.getText());
+                    // 渠道
                     labelNewChanel.setText("" + channelNew);
                     //应用名作为目录
                     File dits = new File("out/" + newAppName + "/apkInfo");

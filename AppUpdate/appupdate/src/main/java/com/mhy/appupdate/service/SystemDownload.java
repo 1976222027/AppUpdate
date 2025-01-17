@@ -148,6 +148,10 @@ public class SystemDownload {
         DownloadManager.Query query = new DownloadManager.Query();
         query.setFilterById(mTaskId);//筛选下载任务，传入任务ID,可变参数
         Cursor cursor = downloadManager.query(query);
+//        int idIndex = cursor.getColumnIndex(DownloadManager.COLUMN_ID);
+//        int id = cursor.getInt(idIndex);
+//        query.setFilterById(id); //通过下载的id查找
+
         if (cursor.moveToFirst()) {
             int index = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
             if (index < 0) {
