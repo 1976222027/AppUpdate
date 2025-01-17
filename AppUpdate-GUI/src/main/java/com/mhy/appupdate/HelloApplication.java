@@ -454,15 +454,26 @@ public class HelloApplication extends Application {
     }
 
     public static String getVersionFromManifest() {
+        //运行时本包所在路径
         String jarPath = HelloApplication.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         String MANIFEST_VERSION_KEY = "Implementation-Version";
         String MANIFEST_BUILD = "Built-Timestamp";
+        System.out.println(jarPath);
+        File f = new File(jarPath);
+        if (f.exists() && f.isDirectory()) {
+            for (String s : f.list()) {
+                if (s.endsWith("jar")) {
+                    jarPath = jarPath + "/" + s;
+                }
+            }
+        }
         try {
             JarFile jar = new JarFile(jarPath);
             Manifest manifest = jar.getManifest();
             Attributes attributes = manifest.getMainAttributes();
             return "v_" + attributes.getValue(MANIFEST_VERSION_KEY) + "   build_" + attributes.getValue(MANIFEST_BUILD);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return "";
     }

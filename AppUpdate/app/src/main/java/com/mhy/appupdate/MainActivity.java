@@ -77,8 +77,11 @@ public class MainActivity extends AppCompatActivity {
                         Gson gson = new Gson();
                         UpdateInfo updateInfo = gson.fromJson(data, UpdateInfo.class);
                         if (updateInfo.getCode() == 0) {
-//                            downloadApk(updateInfo);//自定义下载
+                            //自定义下载
+//                            downloadApk(updateInfo);
+                            //浏览器下载
 //                            SystemDownload.getInstance(MainActivity.this).downloadByBrowser(updateInfo.getData().getApkUrl());
+                            // 系统下载
                             try {
                                 PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
                                 String url = "";
@@ -86,10 +89,10 @@ public class MainActivity extends AppCompatActivity {
                                 String newVer = updateInfo.getData().getNewVersionName();
                                 if (patch != null && !TextUtils.isEmpty(patch.getPatchUrl())) {
                                     url = patch.getPatchUrl();
-                                    SystemDownload.getInstance(MainActivity.this).downloadPatch(url, newVer);
+                                    SystemDownload.getInstance(MainActivity.this).downloadPatch(url, newVer, true);
                                 } else {
                                     url = updateInfo.getData().getApkUrl();
-                                    SystemDownload.getInstance(MainActivity.this).downloadAPK(url, newVer);
+                                    SystemDownload.getInstance(MainActivity.this).downloadAPK(url, newVer, true);
                                 }
                             } catch (Exception ignored) {
                             }

@@ -2,7 +2,7 @@
 [![](https://jitpack.io/v/com.gitee.mahongyin/appupdate.svg)](https://jitpack.io/#com.gitee.mahongyin/appupdate)
 
 ```groovy
-implementation "com.gitee.mahongyin:appupdate-aar:0.0.5"
+implementation "com.gitee.mahongyin:appupdate-aar:1.3"
 
 ```
 android sdk 9 armv5    

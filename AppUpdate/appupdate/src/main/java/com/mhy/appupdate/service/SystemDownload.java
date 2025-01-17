@@ -66,20 +66,20 @@ public class SystemDownload {
         }
     };
 
-    public void downloadPatch(String patchUrl, String newVersionName) {
+    public void downloadPatch(String patchUrl, String newVersionName, boolean showNotification) {
         newVerName = newVersionName;
         isPatch = true;
-        download(patchUrl, "app_" + newVersionName + "_apk.patch");
+        download(patchUrl, "app_" + newVersionName + "_apk.patch", showNotification);
     }
 
-    public void downloadAPK(String patchUrl, String newVersionName) {
+    public void downloadAPK(String patchUrl, String newVersionName, boolean showNotification) {
         newVerName = newVersionName;
         isPatch = false;
-        download(patchUrl, "app_" + newVersionName + ".apk");
+        download(patchUrl, "app_" + newVersionName + ".apk", showNotification);
     }
 
     //使用系统下载器下载
-    private void download(String versionUrl, String versionName) {
+    private void download(String versionUrl, String versionName, boolean showNotification) {
         //将下载请求加入下载队列
         downloadManager = (DownloadManager) mContext.getSystemService(Context.DOWNLOAD_SERVICE);
         //创建下载任务
@@ -95,7 +95,11 @@ public class SystemDownload {
          *    VISIBILITY_VISIBLE_NOTIFY_COMPLETED:  下载过程中和下载完成后均可见
          *    VISIBILITY_HIDDEN:                    始终不显示通知
          */
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+        if (showNotification) {
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+        } else {
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
+        }
 
         // 设置通知栏的标题，如果不设置，默认使用文件名
         request.setTitle("新版本");
@@ -178,17 +182,16 @@ public class SystemDownload {
                     }
                     //打开文件进行安装
                     installAPK(mTaskId, localFilename);
-                    cursor.close();
                     break;
                 case DownloadManager.STATUS_FAILED:
                     //下载失败
                     LogUtils.e("下载失败");
+                    // 一次下载失败，取消下载广播
                     unregisterReceiver();
-                    cursor.close();
                     break;
             }
         }
-
+        cursor.close();
     }
 
     //下载到本地后执行安装根据任务的id进行安装
@@ -196,7 +199,7 @@ public class SystemDownload {
         // 得到下载文件
         Uri downloadFileUri = downloadManager.getUriForDownloadedFile(taskId);
         if (isPatch) {
-            String path = AppUtils.getApkCacheFilesDir(mContext);//Android/data/packagename/files/apk/
+            String path = AppUtils.getUpdateCacheFilesDir(mContext);//Android/data/packagename/files/apk/
             File dirFile = new File(path);
             if (!dirFile.exists()) {
                 dirFile.mkdirs();
@@ -254,7 +257,7 @@ public class SystemDownload {
             }
             mContext.startActivity(install);
         }
-
+        // 一次下载结束后，取消下载广播
         unregisterReceiver();
     }
 

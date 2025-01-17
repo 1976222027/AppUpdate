@@ -347,17 +347,30 @@ public final class AppUtils {
     }
 
     /**
-     * 获取APK缓存的文件夹
-     *
-     * @param context
-     * @return
+     * 获取更新缓存的文件夹
      */
-    public static String getApkCacheFilesDir(Context context) {
+    public static String getUpdateCacheFilesDir(Context context) {
         File[] files = ContextCompat.getExternalFilesDirs(context, Constants.DEFAULT_DIR);
         if (files != null && files.length > 0) {
             return files[0].getAbsolutePath();
         }
         return new File(context.getFilesDir(), Constants.DEFAULT_DIR).getAbsolutePath();
+    }
+
+    /**
+     * 清除 更新缓存的文件夹
+     * @param savePath 自定义保存路径 空则默认路径
+     */
+    public static void clearUpdateApkCache(Context context, String savePath) {
+        File file = new File(savePath);
+        if (file.exists()) {
+            deleteFile(file);
+        } else {
+            File dir = new File(getUpdateCacheFilesDir(context));
+            if (dir.exists()) {
+                deleteFile(dir);
+            }
+        }
     }
 
     public static String getApkPath(Context context) {

@@ -143,7 +143,7 @@ public class DownloadService extends Service {
 
         // 如果保存路径为空则使用缓存路径
         if (TextUtils.isEmpty(path)) {
-            path = AppUtils.getApkCacheFilesDir(getContext());
+            path = AppUtils.getUpdateCacheFilesDir(getContext());
         }
         File dirFile = new File(path);
         if (!dirFile.exists()) {
