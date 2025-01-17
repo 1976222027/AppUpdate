@@ -215,6 +215,7 @@ tasks.register("mvPom", Task.class) {
         }
     }
 }
+//合并任务，创建jitpack.yaml文件 打包aar和pom文件 移动到update-aar文件夹/repo
 // 执行任务后 取repo目录上传github 打tag 发布jitpack
 tasks.register("createJitPackYml", Task.class) {
     group = "mavenRepo"
