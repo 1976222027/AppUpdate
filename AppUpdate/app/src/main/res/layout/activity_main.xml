@@ -7,11 +7,19 @@
     android:padding="16dp">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/textJson"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ellipsize="end"
-        android:maxLines="8"
+        android:maxLines="12"
+        android:overScrollMode="always"
+        android:scrollbars="vertical"
+        android:textColor="#ff0000" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_marginTop="30dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:textColor="#ff0000" />
 
     <Button

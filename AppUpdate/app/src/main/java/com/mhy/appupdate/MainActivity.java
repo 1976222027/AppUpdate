@@ -4,6 +4,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.pm.PackageInfoCompat;
 
 import com.google.gson.Gson;
 import com.mhy.appupdate.http.OkHttpManager;
@@ -45,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Button downloadBtn;
     private Button cancelBtn;
-    private TextView textView, tvProgress;
+    private TextView textView, textJson, tvProgress;
     private ProgressBar progressBar;
     private AppUpdater mAppUpdater;
     private UpdateCallback updateCallback;
@@ -56,11 +58,18 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         textView = findViewById(R.id.textView);
+        textJson = findViewById(R.id.textJson);
         tvProgress = findViewById(R.id.tv_progress);
         downloadBtn = findViewById(R.id.downloadBtn);
         cancelBtn = findViewById(R.id.cancelBtn);
         progressBar = findViewById(R.id.progressBar);
+        textJson.setMovementMethod(ScrollingMovementMethod.getInstance());
 
+        setListener();
+
+    }
+
+    private void setListener() {
         updateCallback = new UpdateCallback() {
             @Override
             public void onDownloading(boolean isDownloading) {
@@ -124,10 +133,29 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public Void invoke(String data) {
                         LogUtils.i("请求结果==" + data);
-                        textView.setText(data);
+                        textJson.setText(data);
                         Gson gson = new Gson();
                         UpdateInfo updateInfo = gson.fromJson(data, UpdateInfo.class);
                         if (updateInfo.getCode() == 0) {
+                            //最小可用版本
+                            long minVersion = updateInfo.getData().getMinVersion();
+                            PackageInfo packageInfo = null;
+                            try {
+                                packageInfo = AppUtils.getPackageInfo(MainActivity.this);
+                            } catch (PackageManager.NameNotFoundException e) {
+                                e.printStackTrace();
+                            }
+                            long versionCode = 0;
+                            if (packageInfo != null) {//当前版本号
+                                versionCode = PackageInfoCompat.getLongVersionCode(packageInfo);
+                            }
+                            // 自行处弹窗UI
+                            if (versionCode < minVersion) {
+                                //强制更新
+                            } else {
+                                //非强制更新
+                            }
+
                             //自定义下载
                             downloadApk(updateInfo);
                             //浏览器下载，只能是.apk文件，不能是补丁
@@ -140,7 +168,6 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
-
     }
 
     private void systemDownload(UpdateInfo updateInfo, boolean showNotification, boolean needProgress) {

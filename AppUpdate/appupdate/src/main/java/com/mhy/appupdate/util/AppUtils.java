@@ -83,12 +83,12 @@ public final class AppUtils {
      * 通过APK路径获取包信息
      *
      * @param context         上下文
-     * @param archiveFilePath 文件路径
+     * @param archiveFilePath apk文件路径
      * @return
      */
     public static PackageInfo getPackageInfo(Context context, String archiveFilePath) {
         PackageManager packageManager = context.getPackageManager();
-        PackageInfo packageInfo = packageManager.getPackageArchiveInfo(archiveFilePath, PackageManager.GET_ACTIVITIES);
+        PackageInfo packageInfo = packageManager.getPackageArchiveInfo(archiveFilePath, 0);
         return packageInfo;
     }
 
@@ -160,7 +160,7 @@ public final class AppUtils {
     }
 
     /**
-     * APK是否存在
+     * APK是否存在相同版本的APK
      *
      * @param context     上下文
      * @param versionCode 版本号

@@ -164,11 +164,12 @@ public class DownloadService extends Service {
             } else if (versionCode > 0) {
                 // 如果存在versionCode，则校验versionCode
                 LogUtils.d(String.format(Locale.getDefault(), "UpdateConfig.versionCode: %d", versionCode));
+                // 本地下载目录存在相同版本的apk
                 isExistApk = AppUtils.apkExists(getContext(), versionCode, mApkFile);
             }
 
             if (isExistApk) {
-                // 本地已经存在要下载的APK
+                // 本地已经存在要下载的APK版本呢，直接安装
                 LogUtils.d("CacheFile: " + mApkFile);
                 if (config.isInstallApk()) {
                     String authority = config.getAuthority();
@@ -184,11 +185,10 @@ public class DownloadService extends Service {
                 stopService();
                 return;
             }
-
             // 删除旧文件
             mApkFile.delete();
         }
-        LogUtils.d("File: " + mApkFile);
+        LogUtils.d("File delete: " + mApkFile);
         this.mUpdateCallback = callback;
         IHttpManager.DownloadCallback downloadCallback = new AppDownloadCallback(getContext(), this, config, mApkFile, callback, getNotification(notification));
         getHttpManager(httpManager).download(url, mApkFile.getAbsolutePath(), config.getRequestProperty(), downloadCallback);
