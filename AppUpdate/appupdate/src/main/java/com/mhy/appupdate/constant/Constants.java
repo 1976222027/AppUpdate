@@ -22,7 +22,7 @@ public final class Constants {
     public static final String DEFAULT_FILE_PROVIDER = ".AppUpdaterFileProvider";
 
     public static final String DEFAULT_DIR = "apk";
-
+    // 进度更新频率
     public static final long MINIMUM_INTERVAL_MILLIS = 200L;
 
     public static final String PATCH_SUFFIX = ".patch";

@@ -56,7 +56,7 @@ public class HPatch {
      * @param callback       回调
      */
     public void patchApk(String oldFile, String diffFile, String outNewFile, PatchCallback callback) {
-        if (!init) throw new RuntimeException("please call initSo() first");
+        if (!init) throw new RuntimeException("please call initSo() first once");
         LogUtils.d(oldFile+",\n"+diffFile+",\n"+outNewFile);
         FutureTask<Integer> task = new FutureTask<>(new Callable<Integer>() {
             @Override

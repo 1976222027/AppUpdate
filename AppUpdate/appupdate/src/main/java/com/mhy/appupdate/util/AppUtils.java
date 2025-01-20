@@ -154,6 +154,7 @@ public final class AppUtils {
         } else {
             uriData = Uri.fromFile(file);
         }
+        intent.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true); //表明不是未知来源
         intent.setDataAndType(uriData, type);
         return intent;
     }
