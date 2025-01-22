@@ -18,9 +18,8 @@ import android.webkit.MimeTypeMap;
 import androidx.annotation.Nullable;
 
 import com.github.sisong.HPatch;
-import com.mhy.appupdate.constant.Constants;
+import com.mhy.appupdate.constant.UpdateConstants;
 import com.mhy.appupdate.listener.UpdateCallback;
-import com.mhy.appupdate.provider.DownloadFileProvider;
 import com.mhy.appupdate.util.AppUtils;
 import com.mhy.appupdate.util.LogUtils;
 
@@ -40,9 +39,10 @@ import java.util.TimerTask;
 public class SystemDownload {
     private DownloadManager downloadManager;
     private Context mContext;
-    private long mTaskId;
+    private long mTaskId = 0;
     private static volatile SystemDownload instance;
     private boolean isPatch = false;
+    private boolean autoInstall = true;
     private String newVerName = "";
     /**
      * 更新回调
@@ -82,6 +82,14 @@ public class SystemDownload {
     private BroadcastReceiver receiver;
 
     /**
+     * 这只是否自动安装
+     */
+    public SystemDownload setAutoInstall(boolean autoInstall) {
+        this.autoInstall = autoInstall;
+        return this;
+    }
+
+    /**
      * 通知栏 下载标题
      */
     public SystemDownload setNotifyTitle(String notifyTitle) {
@@ -102,47 +110,32 @@ public class SystemDownload {
         return this;
     }
 
+    public SystemDownload setShowLog(boolean showDebug) {
+        LogUtils.setShowLog(showDebug);
+        return this;
+    }
+
     /**
      * 下载补丁
      */
-    public void downloadPatch(String patchUrl, String newVersionName, boolean showNotification, boolean needProgress) {
+    public void downloadPatch(String patchUrl, long newVersionCode, String newVersionName, String md5Patch, boolean showNotification, boolean needProgress) {
         newVerName = newVersionName;
         isPatch = true;
-        download(patchUrl, "app_" + newVersionName + "_apk.patch", showNotification, needProgress);
+        download(patchUrl, newVersionCode, "app_" + newVersionName + "_apk.patch", md5Patch, showNotification, needProgress);
     }
 
     /**
      * 下载apk
      */
-    public void downloadAPK(String apkUrl, String newVersionName, boolean showNotification, boolean needProgress) {
+    public void downloadAPK(String apkUrl, long newVersionCode, String newVersionName, String md5Apk, boolean showNotification, boolean needProgress) {
         newVerName = newVersionName;
         isPatch = false;
-        download(apkUrl, "app_" + newVersionName + ".apk", showNotification, needProgress);
+        download(apkUrl, newVersionCode, "app_" + newVersionName + ".apk", md5Apk, showNotification, needProgress);
     }
 
     //使用系统下载器下载
-    private void download(String versionUrl, String versionName, boolean showNotification, boolean needProgress) {
-        lastProgress = 0;
-        //将下载请求加入下载队列
-        downloadManager = (DownloadManager) mContext.getSystemService(Context.DOWNLOAD_SERVICE);
-        //注册广播接收者，监听下载状态
-        registerReceiver(needProgress);
-        // 查询下载情况
-        DownloadManager.Query query = new DownloadManager.Query();
-        //根据下载ID过滤
-        query.setFilterById(mTaskId);
-        //根据下载中状态过滤
-        query.setFilterByStatus(DownloadManager.STATUS_RUNNING);
-        boolean isDownloading = false;
-        try (Cursor cursor = downloadManager.query(query)) {
-            int idIndex = cursor.getColumnIndex(DownloadManager.COLUMN_ID);
-            int id = cursor.getInt(idIndex);
-            if (cursor.getCount() > 0 && mTaskId == id) {//正下载
-                isDownloading = true;
-            }
-        } catch (Exception e) {
-            LogUtils.e(e.toString());
-        }
+    private void download(String versionUrl, long versionCode, String fileName, String md5, boolean showNotification, boolean needProgress) {
+        boolean isDownloading = mTaskId != 0;
         if (mHandler != null) {
             Message msg = new Message();
             msg.what = 0;
@@ -153,35 +146,57 @@ public class SystemDownload {
             LogUtils.i("已经在下载中,请勿重复下载。");
             return;
         }
-
-        //创建下载任务
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(versionUrl));
-        //设置文件类型，可以在下载结束后自动打开该文件
-        MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
-        String mimeString = mimeTypeMap.getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(versionUrl));
-        request.setMimeType(mimeString);//加入任务队列
-        /*
-         * 设置在通知栏是否显示下载通知(下载进度), 有 3 个值可选:
-         * VISIBILITY_VISIBLE:                   下载过程中可见, 下载完后自动消失 (默认)
-         * VISIBILITY_VISIBLE_NOTIFY_COMPLETED:  下载过程中和下载完成后均可见
-         * VISIBILITY_HIDDEN:                    始终不显示通知
-         * VISIBILITY_VISIBLE_NOTIFY_ONLY_COMPLETION 只在下载完成后显示通知
-         */
-        if (showNotification) {
-            // 设置通知栏的标题，如果不设置，默认使用文件名
-            if (!TextUtils.isEmpty(notifyTitle)) {
-                request.setTitle(notifyTitle);
-            }
-            // 设置通知栏的描述
-            if (!TextUtils.isEmpty(notifyDescription)) {
-                request.setDescription(notifyDescription);
-            }
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
-        } else {
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
+        String path = AppUtils.getUpdateCacheFilesDir(mContext);
+        //删除旧的更新文件，和保存位置对应
+        File oldFile = new File(path, fileName);
+        boolean isExistApk = false;
+        if (!TextUtils.isEmpty(md5)) {//验md5
+            isExistApk = AppUtils.verifyFileMD5(oldFile, md5);
+        } else if (versionCode > 0) {
+            isExistApk = AppUtils.apkExists(mContext, versionCode, oldFile);
         }
+        if (isExistApk) {//存在同版本的 直接安装
+            lookAPK(0, oldFile.getAbsolutePath());
+            return;
+        }
+        //删除旧的更新文件
+        AppUtils.clearUpdateApkCache(mContext, oldFile.getAbsolutePath());
 
-        /*if (mTaskId != 0) {// 取消上一次下载任务
+        lastProgress = 0;
+        //将下载请求加入下载队列
+        downloadManager = (DownloadManager) mContext.getSystemService(Context.DOWNLOAD_SERVICE);
+        //注册广播接收者，监听下载状态
+        registerReceiver(needProgress);
+
+        try {
+            //创建下载任务
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(versionUrl));
+            //设置文件类型，可以在下载结束后自动打开该文件
+            MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
+            String mimeString = mimeTypeMap.getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(versionUrl));
+            request.setMimeType(mimeString);//加入任务队列
+            /*
+             * 设置在通知栏是否显示下载通知(下载进度), 有 3 个值可选:
+             * VISIBILITY_VISIBLE:                   下载过程中可见, 下载完后自动消失 (默认)
+             * VISIBILITY_VISIBLE_NOTIFY_COMPLETED:  下载过程中和下载完成后均可见
+             * VISIBILITY_HIDDEN:                    始终不显示通知
+             * VISIBILITY_VISIBLE_NOTIFY_ONLY_COMPLETION 只在下载完成后显示通知
+             */
+            if (showNotification) {
+                // 设置通知栏的标题，如果不设置，默认使用文件名
+                if (!TextUtils.isEmpty(notifyTitle)) {
+                    request.setTitle(notifyTitle);
+                }
+                // 设置通知栏的描述
+                if (!TextUtils.isEmpty(notifyDescription)) {
+                    request.setDescription(notifyDescription);
+                }
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+            } else {
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
+            }
+
+        /*if (mTaskId != 0) {// 取消上一次下载任务  mTaskId存起来+,断点续传，暂停恢复
             downloadManager.remove(mTaskId);
             // 记录已下载的字节数()
             long downloadedBytes = getDownloadedBytes(mTaskId);
@@ -198,29 +213,37 @@ public class SystemDownload {
             }
         }*/
 
-        // 是否允许漫游时下载
-        request.setAllowedOverRoaming(false);//漫游网络是否可以下载
-        // 允许在流量下下载
-        request.setAllowedOverMetered(true);
-        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
-        // 是否允许该记录在下载管理界面可见，Q只有公共目录才可见
-        request.setVisibleInDownloadsUi(false);
-        // 允许媒体扫描，根据下载的文件类型被加入相册、音乐等媒体库
-        //request.allowScanningByMediaScanner(); // Q私有目录不扫描
-        // 1.sdcard的目录下的download文件夹，下载sd卡需要权限
-        //request.setDestinationInExternalPublicDir("/sdcard/download", versionName);
-        // 2.必须是外部存储路径的文件 URI，并且调用应用程序必须具有 WRITE_EXTERNAL_STORAGE 权限。
-        // request.setDestinationUri(Uri);
-        // 3.下载到 Android/data/packagename/files/apk/不需要权限
-        request.setDestinationInExternalFilesDir(mContext, Constants.DEFAULT_DIR, versionName);
-        //加入下载列后会给该任务返回一个long型的id, 通过该id可以取消任务，重启任务等等
-        mTaskId = downloadManager.enqueue(request);
-        //开始下载
-        if (mHandler != null) {
-            Message msg1 = new Message();
-            msg1.what = 1;
-            msg1.obj = versionUrl;
-            mHandler.sendMessage(msg1);
+            // 是否允许漫游时下载
+            request.setAllowedOverRoaming(false);//漫游网络是否可以下载
+            // 允许在流量下下载
+            request.setAllowedOverMetered(true);
+            request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
+            // 是否允许该记录在下载管理界面可见，Q只有公共目录才可见
+            request.setVisibleInDownloadsUi(false);
+            // 允许媒体扫描，根据下载的文件类型被加入相册、音乐等媒体库
+            //request.allowScanningByMediaScanner(); // Q私有目录不扫描
+            // 1.sdcard的目录下的download文件夹，下载sd卡需要权限, Q+不需要，M~P需要？。。
+            // request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+            // AppUtils.clearUpdateApkCache(mContext, new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName));
+            // 2.必须是外部存储路径的文件 URI，并且调用应用程序必须具有 WRITE_EXTERNAL_STORAGE 权限。
+            // request.setDestinationUri(Uri);
+            // 3.下载到 Android/data/packagename/files/apk/不需要权限
+            request.setDestinationInExternalFilesDir(mContext, UpdateConstants.DEFAULT_DIR, fileName);
+            File dirFile = new File(path);
+            if (!dirFile.exists()) {//目录不存在，创建
+                dirFile.mkdirs();
+            }
+            //加入下载列后会给该任务返回一个long型的id, 通过该id可以取消任务，重启任务等等
+            mTaskId = downloadManager.enqueue(request);
+            //开始下载
+            if (mHandler != null) {
+                Message msg1 = new Message();
+                msg1.what = 1;
+                msg1.obj = versionUrl;
+                mHandler.sendMessage(msg1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -311,16 +334,18 @@ public class SystemDownload {
 //              // 用户点击了通知栏，如果下载完了，点击安装
                 //checkDownloadStatus();
 //            } else
-                if (TextUtils.equals(action, DownloadManager.ACTION_DOWNLOAD_COMPLETE)) {//下载完成
+                if (TextUtils.equals(action, DownloadManager.ACTION_DOWNLOAD_COMPLETE)) {
+                    //判断是否下载完成的广播
                     long completedDownloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
                     if (completedDownloadId == mTaskId) {// 更新通知栏中的相关信息，例如显示下载完成的提示
                         //下载完成
                         Uri downloadFileUri = downloadManager.getUriForDownloadedFile(completedDownloadId);
-                        File f = new File(AppUtils.getPhotoPathFromContentUri(mContext, downloadFileUri));
-                        //打开文件进行安装/补丁合并安装
-                        installAPK(mTaskId, f.getAbsolutePath());
-                        if (mCallback != null) {
-                            mCallback.onFinish(f);
+                        if (downloadFileUri != null) {
+                            File f = new File(AppUtils.getRealFilePathFromUri(mContext, downloadFileUri));
+                            //打开文件进行安装/补丁合并安装
+                            lookAPK(mTaskId, f.getAbsolutePath()); //TODO 这两处Handler是空，所以用callback
+                        } else {
+                            handlerError("下载失败");
                         }
                     }
                 }
@@ -331,8 +356,8 @@ public class SystemDownload {
         intentFilter.addAction(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
 //        intentFilter.addAction(DownloadManager.ACTION_NOTIFICATION_CLICKED);//通知点击
         //注册广播接收，监听下载状态
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            mContext.registerReceiver(receiver, intentFilter, Context.RECEIVER_NOT_EXPORTED);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {//需要导出权限，系统发送的广播
+            mContext.registerReceiver(receiver, intentFilter, Context.RECEIVER_EXPORTED);
         } else {
             mContext.registerReceiver(receiver, intentFilter);
         }
@@ -407,7 +432,7 @@ public class SystemDownload {
                         msg2.setData(bundle);
                         mHandler.sendMessage(msg2);
                     }
-                    LogUtils.i("下载完成");
+                    LogUtils.i("检查下载完成");
                     //int id = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_ID));
                     // 获取下载好的 apk 路径
                     String localFilename = null;
@@ -419,17 +444,12 @@ public class SystemDownload {
                         localFilename = cursor.getString(columnIndex);
                     }
                     //打开文件进行安装/补丁合并安装
-                    installAPK(mTaskId, localFilename);
+                    lookAPK(mTaskId, localFilename);
                     break;
                 case DownloadManager.STATUS_FAILED:
                     //下载失败
-                    LogUtils.e("下载失败");
-                    if (mHandler != null) {
-                        Message msg4 = new Message();
-                        msg4.what = 4;
-                        msg4.obj = new Exception("下载失败");
-                        mHandler.sendMessage(msg4);
-                    }
+                    LogUtils.e("检查下载失败");
+                    handlerError("检查下载失败");
                     // 一次下载失败，取消下载广播
                     unregisterReceiver();
                     break;
@@ -439,9 +459,9 @@ public class SystemDownload {
     }
 
     //下载到本地后执行安装根据任务的id进行安装
-    private void installAPK(long taskId, String downloadFile) {
+    private void lookAPK(long taskId, String downloadFile) {
         if (isPatch) {//合并补丁
-            String path = AppUtils.getUpdateCacheFilesDir(mContext);//Android/data/packagename/files/apk/
+            String path = AppUtils.getUpdateCacheFilesDir(mContext);
             File dirFile = new File(path);
             if (!dirFile.exists()) {
                 dirFile.mkdirs();
@@ -453,10 +473,11 @@ public class SystemDownload {
             File file = new File(downloadPath);
             if (!file.exists()) {//如果不存在,再通过下载uri获取真实文件路径
                 // 得到下载文件
-                if (downloadManager != null) {
+                if (downloadManager != null && taskId != 0) {
                     Uri downloadFileUri = downloadManager.getUriForDownloadedFile(taskId);
-                    downloadPath = AppUtils.getPhotoPathFromContentUri(mContext, downloadFileUri);
+                    downloadPath = AppUtils.getRealFilePathFromUri(mContext, downloadFileUri);
                 } else {
+                    handlerError("下载失败，补丁文件不存在");
                     return;
                 }
             }
@@ -465,33 +486,13 @@ public class SystemDownload {
                         @Override
                         public void onPatchResult(boolean success) {
                             if (success) {//合并完成
-                                Intent install = new Intent(Intent.ACTION_VIEW);
-                                install.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                install.addCategory(Intent.CATEGORY_DEFAULT);
-                                Uri uriApk;
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                    install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                    uriApk = DownloadFileProvider.getUriForFile(mContext, mContext.getPackageName() + Constants.DEFAULT_FILE_PROVIDER, newApk);
-                                } else {
-                                    uriApk = Uri.fromFile(newApk);
+                                LogUtils.d("补丁合并成功");
+                                if (autoInstall) {
+                                    installApk(newApk);
                                 }
-                                install.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true); //表明不是未知来源
-                                install.setDataAndType(uriApk, "application/vnd.android.package-archive");
-                                mContext.startActivity(install);
-
-                                if (mHandler != null) {
-                                    Message msg3 = new Message();
-                                    msg3.what = 3;
-                                    msg3.obj = newApk;
-                                    mHandler.sendMessage(msg3);
-                                }
+                                handlerFinish(newApk);
                             } else {
-                                if (mHandler != null) {
-                                    Message msg4 = new Message();
-                                    msg4.what = 4;
-                                    msg4.obj = new Exception("补丁合并失败");
-                                    mHandler.sendMessage(msg4);
-                                }
+                                handlerError("补丁合并失败");
                             }
                         }
                     });
@@ -506,44 +507,83 @@ public class SystemDownload {
                 return;
             }
         }*/
-            // apk文件类型
-            String type = downloadManager.getMimeTypeForDownloadedFile(taskId);
-            if (TextUtils.isEmpty(type)) {
-                type = "application/vnd.android.package-archive";//"*/*";
-            }
-            // 得到下载文件
-            Uri downloadFileUri = downloadManager.getUriForDownloadedFile(taskId);
 
-            Intent install = new Intent(Intent.ACTION_VIEW);
-            install.setDataAndType(downloadFileUri, type);
-            install.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            install.addCategory(Intent.CATEGORY_DEFAULT);
-            install.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true); //表明不是未知来源
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            File apkFile;
+            if (downloadManager != null && taskId != 0) {
+                // apk文件类型
+                //String type = downloadManager.getMimeTypeForDownloadedFile(taskId);
+                // 得到下载文件
+                Uri downloadFileUri = downloadManager.getUriForDownloadedFile(taskId);
+                apkFile = new File(AppUtils.getRealFilePathFromUri(mContext, downloadFileUri));
+            } else {
+                String downloadPath = Uri.parse(downloadFile).getPath();
+                File file = new File(downloadPath);
+                if (!file.exists()) {
+                    handlerError("下载失败， 文件不存在");
+                    return;
+                }
+                apkFile = file;
             }
-            mContext.startActivity(install);
-
-            if (mHandler != null) {
-                File f = new File(AppUtils.getPhotoPathFromContentUri(mContext, downloadFileUri));
-                Message msg3 = new Message();
-                msg3.what = 3;
-                msg3.obj = f;
-                mHandler.sendMessage(msg3);
+            if (autoInstall) {
+                installApk(apkFile);
             }
-
+            handlerFinish(apkFile);
         }
         // 一次下载结束后，取消下载广播
         unregisterReceiver();
     }
 
+    private void installApk(File fileApk) {
+        Intent install = new Intent(Intent.ACTION_VIEW);
+        install.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        install.addCategory(Intent.CATEGORY_DEFAULT);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
+        install.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true); //表明不是未知来源
+        // 不能直接用dowanload下载的Uri, android M 不认
+        install.setDataAndType(AppUtils.fromFile24(mContext, fileApk), "application/vnd.android.package-archive");
+        try {
+            mContext.startActivity(install);
+        } catch (Exception e) {
+            e.printStackTrace();
+            LogUtils.e("没有找到打开此类文件的程序");
+        }
+    }
+
+    private void handlerFinish(File newApk) {
+        if (mHandler != null) {
+            Message msg3 = new Message();
+            msg3.what = 3;
+            msg3.obj = newApk;
+            mHandler.sendMessage(msg3);
+        } else {
+            if (mCallback != null) {
+                mCallback.onFinish(newApk);
+            }
+        }
+    }
+
+    private void handlerError(String err) {
+        if (mHandler != null) {
+            Message msg4 = new Message();
+            msg4.what = 4;
+            msg4.obj = new Exception(err);
+            mHandler.sendMessage(msg4);
+        } else {
+            if (mCallback != null) {
+                mCallback.onError(new Exception(err));
+            }
+        }
+    }
+
 
     private void unregisterReceiver() {
+        mTaskId = 0;
         if (timer != null) {
             timer.cancel();
             timer = null;
         }
-        mTaskId = 0;
         if (receiver != null) {
             mContext.unregisterReceiver(receiver);
             receiver = null;
@@ -558,21 +598,10 @@ public class SystemDownload {
         if (mTaskId != 0) {
             downloadManager.remove(mTaskId);
         }
+        unregisterReceiver();
         if (mHandler != null) {
             mHandler.sendEmptyMessage(5);
         }
-        unregisterReceiver();
-    }
-
-    /**
-     * 通过浏览器下载
-     */
-    public void downloadByBrowser(String url) {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.addCategory(Intent.CATEGORY_BROWSABLE);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-        intent.setData(Uri.parse(url));
-        mContext.startActivity(intent);
     }
 
 }

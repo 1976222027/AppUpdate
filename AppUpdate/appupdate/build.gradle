@@ -44,7 +44,7 @@ dependencies {
     //implementation libs.getkeepsafe.relinker
     compileOnly libs.appcompat
 }
-def VERSION_NAME = '1.3'
+def VERSION_NAME = '1.5.0'
 def GROUP_ID = 'com.mhy'
 def ARTIFACT_ID = "appupdate"//project.getName()
 def REPO_PACK = "com/mhy/appupdate/$VERSION_NAME"
@@ -240,4 +240,4 @@ tasks.register("createJitPackYml", Task.class) {
 //git push
 //git tag 0.0.5
 //git push --tags
-//去gitee发布，再去jitpack 构建
+//去gitee发布发行版，再去jitpack 构建

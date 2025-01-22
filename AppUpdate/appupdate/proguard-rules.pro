@@ -21,7 +21,7 @@
 #-renamesourcefileattribute SourceFile
 
 -keep class com.mhy.appupdate.UpdateConfig { *; }
--keep class com.mhy.appupdate.constant.Constants { *; }
+-keep class com.mhy.appupdate.constant.UpdateConstants { *; }
 -keep class com.mhy.appupdate.AppUpdater { *; }
 -keep class com.mhy.appupdate.AppUpdater$Builder { *; }
 # service

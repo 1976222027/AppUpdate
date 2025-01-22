@@ -14,7 +14,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.mhy.appupdate.UpdateConfig;
-import com.mhy.appupdate.constant.Constants;
+import com.mhy.appupdate.constant.UpdateConstants;
 import com.mhy.appupdate.service.DownloadService;
 
 import java.io.File;
@@ -60,7 +60,7 @@ public class NotificationUtils {
         // 如果支持取消下载，点击通知栏时，则取消下载
         if (isSupportCancelDownload) {
             Intent intent = new Intent(context, DownloadService.class);
-            intent.putExtra(Constants.KEY_STOP_DOWNLOAD_SERVICE, true);
+            intent.putExtra(UpdateConstants.KEY_STOP_DOWNLOAD_SERVICE, true);
             PendingIntent deleteIntent = PendingIntent.getService(context, notifyId, intent, getPendingIntentFlags(PendingIntent.FLAG_CANCEL_CURRENT));
             builder.setDeleteIntent(deleteIntent);
         }
@@ -91,7 +91,7 @@ public class NotificationUtils {
         // 如果支持取消下载，点击通知栏时，则取消下载
         if (isSupportCancelDownload) {
             Intent intent = new Intent(context, DownloadService.class);
-            intent.putExtra(Constants.KEY_STOP_DOWNLOAD_SERVICE, true);
+            intent.putExtra(UpdateConstants.KEY_STOP_DOWNLOAD_SERVICE, true);
             //sdk 34 exported为false的 只能显式意图
             PendingIntent deleteIntent = PendingIntent.getService(context, notifyId, intent, getPendingIntentFlags(PendingIntent.FLAG_CANCEL_CURRENT));
             builder.setDeleteIntent(deleteIntent);
@@ -149,8 +149,8 @@ public class NotificationUtils {
         // 点击通知栏时，则重新下载
         if (isReDownload) {
             Intent intent = new Intent(context, DownloadService.class);
-            intent.putExtra(Constants.KEY_RE_DOWNLOAD, true);
-            intent.putExtra(Constants.KEY_UPDATE_CONFIG, config);
+            intent.putExtra(UpdateConstants.KEY_RE_DOWNLOAD, true);
+            intent.putExtra(UpdateConstants.KEY_UPDATE_CONFIG, config);
             PendingIntent clickIntent = PendingIntent.getService(context, notifyId, intent, flag);
             builder.setContentIntent(clickIntent);
         } else {
@@ -229,7 +229,7 @@ public class NotificationUtils {
      * @return
      */
     private static NotificationCompat.Builder buildNotification(Context context, String channelId, @DrawableRes int smallIcon, CharSequence title, CharSequence content) {
-        return buildNotification(context, channelId, smallIcon, title, content, Constants.NONE, Constants.NONE);
+        return buildNotification(context, channelId, smallIcon, title, content, UpdateConstants.NONE, UpdateConstants.NONE);
     }
 
     /**
@@ -250,7 +250,7 @@ public class NotificationUtils {
         builder.setContentText(content);
         builder.setOngoing(true);
 
-        if (progress != Constants.NONE) {
+        if (progress != UpdateConstants.NONE) {
             builder.setProgress(size, progress, size <= 0);
         }
         return builder;

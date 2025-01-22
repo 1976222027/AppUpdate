@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.github.sisong.HPatch;
-import com.mhy.appupdate.constant.Constants;
+import com.mhy.appupdate.constant.UpdateConstants;
 import com.mhy.appupdate.http.HttpManager;
 import com.mhy.appupdate.http.IHttpManager;
 import com.mhy.appupdate.listener.UpdateCallback;
@@ -74,6 +74,10 @@ public class AppUpdater {
         this.mCallback = callback;
         return this;
     }
+    public AppUpdater setShowLog(boolean showLog) {
+        LogUtils.setShowLog(showLog);
+        return this;
+    }
 
     /**
      * 设置一个 {@link IHttpManager}
@@ -106,11 +110,12 @@ public class AppUpdater {
         if (mConfig != null && (!TextUtils.isEmpty(mConfig.getApkUrl()) || !TextUtils.isEmpty(mConfig.getPatchUrl()))) {
             // 如果mContext是Activity,并且配置了下载路径，则默认会校验一次动态权限。
             if (mContext instanceof Activity && !TextUtils.isEmpty(mConfig.getSavePath())) {
-                PermissionUtils.verifyReadAndWritePermissions((Activity) mContext, Constants.RE_CODE_STORAGE_PERMISSION);
+                PermissionUtils.verifyReadAndWritePermissions((Activity) mContext, UpdateConstants.RE_CODE_STORAGE_PERMISSION);
             }
 
             if (mConfig.isShowNotification() && !PermissionUtils.isNotificationEnabled(mContext)) {
                 LogUtils.w("Notification permission is not enabled.");
+                PermissionUtils.startNotificationSetting(mContext);
             }
             // 启动下载服务
             startDownloadService();
@@ -146,7 +151,7 @@ public class AppUpdater {
             mContext.getApplicationContext().bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
         } else {
             // 通过 startService 的方式启动下载服务
-            intent.putExtra(Constants.KEY_UPDATE_CONFIG, mConfig);
+            intent.putExtra(UpdateConstants.KEY_UPDATE_CONFIG, mConfig);
             mContext.startService(intent);
         }
     }
@@ -163,7 +168,7 @@ public class AppUpdater {
      */
     private void stopDownloadService() {
         Intent intent = new Intent(mContext, DownloadService.class);
-        intent.putExtra(Constants.KEY_STOP_DOWNLOAD_SERVICE, true);
+        intent.putExtra(UpdateConstants.KEY_STOP_DOWNLOAD_SERVICE, true);
         mContext.startService(intent);
     }
 
@@ -330,8 +335,8 @@ public class AppUpdater {
          * 设置下载完成后知否自动触发安装APK
          * @param isInstallApk 下载完成后是否自动调用安装APK（默认true）
          */
-        public Builder setInstallApk(boolean isInstallApk) {
-            mConfig.setInstallApk(isInstallApk);
+        public Builder setAutoInstall(boolean isInstallApk) {
+            mConfig.setAutoInstall(isInstallApk);
             return this;
         }
 

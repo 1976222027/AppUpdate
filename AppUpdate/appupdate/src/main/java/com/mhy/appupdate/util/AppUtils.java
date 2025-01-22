@@ -15,12 +15,12 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.webkit.MimeTypeMap;
 
-import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
 import androidx.core.content.pm.PackageInfoCompat;
 
-import com.mhy.appupdate.constant.Constants;
+import com.mhy.appupdate.constant.UpdateConstants;
+import com.mhy.appupdate.provider.DownloadFileProvider;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -122,6 +122,10 @@ public final class AppUtils {
         return 0;
     }
 
+    public static void installApk(Context context, File file) {
+        installApk(context, file, AppUtils.getFileProviderAuthority(context));
+    }
+
     /**
      * 安装APK
      *
@@ -131,7 +135,12 @@ public final class AppUtils {
      */
     public static void installApk(Context context, File file, String authority) {
         Intent intent = getInstallIntent(context, file, authority);
-        context.startActivity(intent);
+        try {
+            context.startActivity(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
+            LogUtils.e("没有找到打开此类文件的程序");
+        }
     }
 
     /**
@@ -150,7 +159,7 @@ public final class AppUtils {
         String type = "application/vnd.android.package-archive";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            uriData = FileProvider.getUriForFile(context, authority, file);
+            uriData = DownloadFileProvider.getUriForFile(context, authority, file);
         } else {
             uriData = Uri.fromFile(file);
         }
@@ -219,7 +228,7 @@ public final class AppUtils {
             }
             return true;
         } catch (FileNotFoundException e) {
-            LogUtils.w(e.getMessage());
+            LogUtils.w(e.toString());
         } finally {
             close(descriptor);
         }
@@ -304,7 +313,7 @@ public final class AppUtils {
      * @return 返回文件访问授权
      */
     public static String getFileProviderAuthority(Context context) {
-        return context.getPackageName() + Constants.DEFAULT_FILE_PROVIDER;
+        return context.getPackageName() + UpdateConstants.DEFAULT_FILE_PROVIDER;
     }
 
     /**
@@ -351,39 +360,104 @@ public final class AppUtils {
      * 获取更新缓存的文件夹
      */
     public static String getUpdateCacheFilesDir(Context context) {
-        File[] files = ContextCompat.getExternalFilesDirs(context, Constants.DEFAULT_DIR);
-        if (files != null && files.length > 0) {
-            return files[0].getAbsolutePath();
+        File files = context.getExternalFilesDir(UpdateConstants.DEFAULT_DIR);
+        if (files != null) {
+            return files.getAbsolutePath();
         }
-        return new File(context.getFilesDir(), Constants.DEFAULT_DIR).getAbsolutePath();
+        return new File(context.getFilesDir(), UpdateConstants.DEFAULT_DIR).getAbsolutePath();
     }
 
     /**
      * 清除 更新缓存的文件夹
+     *
      * @param savePath 自定义保存路径 空则默认路径
      */
     public static void clearUpdateApkCache(Context context, String savePath) {
-        File file = new File(savePath);
-        if (file.exists()) {
-            deleteFile(file);
-        } else {
-            File dir = new File(getUpdateCacheFilesDir(context));
-            if (dir.exists()) {
-                deleteFile(dir);
+        if (!TextUtils.isEmpty(savePath)) {
+            File file = new File(savePath);
+            if (file.exists()) {
+                deleteFile(file);
+                return;
             }
+        }
+        File dir = new File(getUpdateCacheFilesDir(context));
+        if (dir.exists()) {
+            deleteFile(dir);
+
         }
     }
 
+    /**
+     * apk 安装路径
+     */
     public static String getApkPath(Context context) {
         ApplicationInfo applicationInfo = context.getApplicationInfo();
 //    return context.getPackageCodePath();
         return applicationInfo.sourceDir;
     }
 
+    public static Uri fromFile24(Context context, File file) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            return DownloadFileProvider.getUriForFile(context, getFileProviderAuthority(context), file);
+        } else {
+            return Uri.fromFile(file);
+        }
+    }
+
+    /**
+     * 通过文件后缀名获取文件的MIME类型
+     */
+    public static String getMIMEType(File file) {
+        String mime = "";
+        String name = file.getName();
+        String ext = name.substring(name.lastIndexOf(".") + 1, name.length()).toLowerCase();
+        mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+        return mime;
+    }
+
+    /**
+     * 以文件的形式打开
+     */
+    private static void openFile(File file, Context context) {
+        Intent var2 = new Intent();
+        var2.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        var2.setAction(Intent.ACTION_VIEW);
+        String var3 = getMIMEType(file);
+        var2.setDataAndType(Uri.fromFile(file), var3);
+        try {
+            context.startActivity(var2);
+        } catch (Exception var5) {
+            var5.printStackTrace();
+            LogUtils.e("没有找到打开此类文件的程序");
+        }
+    }
+
+    public static void openMarket(Context context, String packageName) {
+        Uri uri = Uri.parse("market://details?id=" + packageName);
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+    }
+    /**
+     * 通过浏览器下载
+     */
+    public static void downloadByBrowser(Context context, String url) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.addCategory(Intent.CATEGORY_BROWSABLE);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+        intent.setData(Uri.parse(url));
+        try {
+            context.startActivity(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
+            LogUtils.e("没有找到打开此类文件的程序");
+        }
+    }
+
     /**
      * 获取真实路径
      */
-    public static String getPhotoPathFromContentUri(Context context, Uri uri) {
+    public static String getRealFilePathFromUri(Context context, Uri uri) {
         String photoPath = "";
         if (context == null || uri == null) {
             return photoPath;
@@ -419,7 +493,7 @@ public final class AppUtils {
                     photoPath = getDataColumn(context, contentUris, selection, selectionArgs);
                 }
             }
-        } else if ("file".equalsIgnoreCase(uri.getScheme())) {
+        } else if (ContentResolver.SCHEME_FILE.equalsIgnoreCase(uri.getScheme())) {
             photoPath = uri.getPath();
         } else {
             photoPath = getDataColumn(context, uri, null, null);
@@ -455,7 +529,7 @@ public final class AppUtils {
                 cursor.close();
             }
         }
-        return null;
+        return "";
     }
 
 }

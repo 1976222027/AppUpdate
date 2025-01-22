@@ -23,11 +23,35 @@
         android:textColor="#ff0000" />
 
     <Button
-        android:id="@+id/downloadBtn"
+        android:id="@+id/downloadBtn1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:text="更新"
+        android:text="系统下载"
+        android:textAllCaps="false"
+        android:textSize="18sp" />
+    <Button
+        android:id="@+id/downloadBtn2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="自定义下载"
+        android:textAllCaps="false"
+        android:textSize="18sp" />
+    <Button
+        android:id="@+id/downloadBtn3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="浏览器下载"
+        android:textAllCaps="false"
+        android:textSize="18sp" />
+    <Button
+        android:id="@+id/downloadBtn4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="应用市场更新"
         android:textAllCaps="false"
         android:textSize="18sp" />
 

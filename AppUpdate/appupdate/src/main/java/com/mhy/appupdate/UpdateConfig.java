@@ -6,7 +6,7 @@ import android.os.Parcelable;
 
 import androidx.annotation.DrawableRes;
 
-import com.mhy.appupdate.constant.Constants;
+import com.mhy.appupdate.constant.UpdateConstants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -55,7 +55,7 @@ public class UpdateConfig implements Parcelable {
     /**
      * 通知栏ID
      */
-    private int mNotificationId = Constants.DEFAULT_NOTIFICATION_ID;
+    private int mNotificationId = UpdateConstants.DEFAULT_NOTIFICATION_ID;
 
     /**
      * 通知栏渠道ID
@@ -95,7 +95,7 @@ public class UpdateConfig implements Parcelable {
     /**
      * 要下载的APK的versionCode
      */
-    private long versionCode = Constants.NONE;
+    private long versionCode = UpdateConstants.NONE;
 
     /**
      * 要下载的APK的versionName
@@ -275,7 +275,7 @@ public class UpdateConfig implements Parcelable {
         return this.mNotificationIcon;
     }
 
-    public boolean isInstallApk() {
+    public boolean isAutoInstall() {
         return isInstallApk;
     }
 
@@ -284,7 +284,7 @@ public class UpdateConfig implements Parcelable {
      *
      * @param isInstallApk 下载完成后是否自动调用安装APK（默认true）
      */
-    public void setInstallApk(boolean isInstallApk) {
+    public void setAutoInstall(boolean isInstallApk) {
         this.isInstallApk = isInstallApk;
     }
 

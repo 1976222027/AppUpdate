@@ -17,7 +17,7 @@ import androidx.annotation.StringRes;
 
 import com.github.sisong.HPatch;
 import com.mhy.appupdate.UpdateConfig;
-import com.mhy.appupdate.constant.Constants;
+import com.mhy.appupdate.constant.UpdateConstants;
 import com.mhy.appupdate.http.HttpManager;
 import com.mhy.appupdate.http.IHttpManager;
 import com.mhy.appupdate.listener.UpdateCallback;
@@ -76,18 +76,17 @@ public class DownloadService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
-            boolean isStop = intent.getBooleanExtra(Constants.KEY_STOP_DOWNLOAD_SERVICE, false);
+            boolean isStop = intent.getBooleanExtra(UpdateConstants.KEY_STOP_DOWNLOAD_SERVICE, false);
             if (isStop) {
                 stopDownload();
             } else if (!isDownloading) {
                 // 是否实通过通知栏触发重复下载
-                boolean isReDownload = intent.getBooleanExtra(Constants.KEY_RE_DOWNLOAD, false);
+                boolean isReDownload = intent.getBooleanExtra(UpdateConstants.KEY_RE_DOWNLOAD, false);
                 if (isReDownload) {
                     mCount++;
                 }
                 // 获取配置信息
-                UpdateConfig config = intent.getParcelableExtra(Constants.KEY_UPDATE_CONFIG);
-
+                UpdateConfig config = intent.getParcelableExtra(UpdateConstants.KEY_UPDATE_CONFIG);
                 startDownload(config);
             } else {
                 LogUtils.w("Please do not repeat the download.");
@@ -138,7 +137,7 @@ public class DownloadService extends Service {
         String patchUrl = config.getPatchUrl();
         if (!TextUtils.isEmpty(patchUrl) && !patchError){//patch合并有问题那么重新下载就下全量包不下补丁
             url = patchUrl;
-            filename = filename + Constants.PATCH_SUFFIX;
+            filename = filename + UpdateConstants.PATCH_SUFFIX;
         }
 
         // 如果保存路径为空则使用缓存路径
@@ -171,7 +170,7 @@ public class DownloadService extends Service {
             if (isExistApk) {
                 // 本地已经存在要下载的APK版本呢，直接安装
                 LogUtils.d("CacheFile: " + mApkFile);
-                if (config.isInstallApk()) {
+                if (config.isAutoInstall()) {
                     String authority = config.getAuthority();
                     // 如果为空则默认
                     if (TextUtils.isEmpty(authority)) {
@@ -272,7 +271,9 @@ public class DownloadService extends Service {
         private int notificationIcon;
 
         private boolean isInstallApk;
-
+        /**
+         * 包名+.XXXprovider
+         */
         private String authority;
 
         private boolean isShowPercentage;
@@ -311,8 +312,8 @@ public class DownloadService extends Service {
             this.notifyId = config.getNotificationId();
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                this.channelId = TextUtils.isEmpty(config.getChannelId()) ? Constants.DEFAULT_NOTIFICATION_CHANNEL_ID : config.getChannelId();
-                this.channelName = TextUtils.isEmpty(config.getChannelName()) ? Constants.DEFAULT_NOTIFICATION_CHANNEL_NAME : config.getChannelName();
+                this.channelId = TextUtils.isEmpty(config.getChannelId()) ? UpdateConstants.DEFAULT_NOTIFICATION_CHANNEL_ID : config.getChannelId();
+                this.channelName = TextUtils.isEmpty(config.getChannelName()) ? UpdateConstants.DEFAULT_NOTIFICATION_CHANNEL_NAME : config.getChannelName();
             }
             if (config.getNotificationIcon() <= 0) {
                 this.notificationIcon = AppUtils.getAppIcon(context);
@@ -320,7 +321,7 @@ public class DownloadService extends Service {
                 this.notificationIcon = config.getNotificationIcon();
             }
 
-            this.isInstallApk = config.isInstallApk();
+            this.isInstallApk = config.isAutoInstall();
 
             this.authority = config.getAuthority();
             // 如果为空则默认
@@ -356,7 +357,7 @@ public class DownloadService extends Service {
             boolean isChanged = false;
             long curTime = System.currentTimeMillis();
             // 降低更新频率
-            if (lastTime + Constants.MINIMUM_INTERVAL_MILLIS < curTime || progress == total) {
+            if (lastTime + UpdateConstants.MINIMUM_INTERVAL_MILLIS < curTime || progress == total) {
                 lastTime = curTime;
                 int progressPercentage = 0;
                 if (total > 0) {
@@ -379,7 +380,7 @@ public class DownloadService extends Service {
                         }
                         notification.onProgress(context, notifyId, channelId, notificationIcon, context.getString(R.string.app_updater_progress_notification_title), content, progressPercentage, 100, isSupportNotifyCancelDownload);
                     } else {
-                        notification.onProgress(context, notifyId, channelId, notificationIcon, context.getString(R.string.app_updater_progress_notification_title), content, (int) progress, Constants.NONE, isSupportNotifyCancelDownload);
+                        notification.onProgress(context, notifyId, channelId, notificationIcon, context.getString(R.string.app_updater_progress_notification_title), content, (int) progress, UpdateConstants.NONE, isSupportNotifyCancelDownload);
                     }
                 }
             }
@@ -411,8 +412,9 @@ public class DownloadService extends Service {
                     @Override
                     public void onPatchResult(boolean success) {
                         if (success){
+                            patchError = false;
                             boolean isOK = true;
-                            if (!TextUtils.isEmpty(config.getApkMD5())) {
+                            if (!TextUtils.isEmpty(config.getApkMD5())) {//如果存在md5就验证
                                 isOK = AppUtils.verifyFileMD5(newApk, config.getApkMD5());
                             }
                             if (isOK) {
@@ -456,7 +458,7 @@ public class DownloadService extends Service {
 
         @Override
         public void onError(Exception e) {
-            LogUtils.w(e.getMessage());
+            LogUtils.e(e.toString());
             downloadService.isDownloading = false;
             if (isShowNotification && notification != null) {
                 String content = isReDownload ? getString(R.string.app_updater_error_notification_content_re_download) : getString(R.string.app_updater_error_notification_content);

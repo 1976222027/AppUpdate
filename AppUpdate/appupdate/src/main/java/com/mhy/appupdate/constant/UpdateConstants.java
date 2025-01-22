@@ -1,7 +1,7 @@
 package com.mhy.appupdate.constant;
 
 
-public final class Constants {
+public final class UpdateConstants {
 
     public static final String KEY_UPDATE_CONFIG = "app_update_config";
 
@@ -16,6 +16,7 @@ public final class Constants {
     public static final String KEY_RE_DOWNLOAD = "app_update_re_download";
 
     public static final int RE_CODE_STORAGE_PERMISSION = 0x66;
+    public static final int RE_CODE_NOTIFY_PERMISSION = 0x55;
 
     public static final int NONE = -1;
 
