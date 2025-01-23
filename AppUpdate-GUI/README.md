@@ -3,15 +3,15 @@
 生成工具 运行gradle任务sources2Jar生成jar包 拷走out文件夹去使用
 
 用于生成补丁的俩包要用一个渠道的包，对于美团多渠道，这样补丁不会影响渠道信息，原来是啥渠道，补丁合成新包后还是啥渠道，随旧包。
-
+支持美团Walle 和[ApkBatchPackage多渠道](https://github.com/chiclaim/ApkBatchPackage)
 ![](out/AppUpdate.png)
 
 使用：
 [github下载release](https://github.com/1976222027/AppUpdate/releases) 
 [gitee下载release](https://gitee.com/mahongyin/AppUpdate/releases) 
 
-配合[客户端github](https://github.com/1976222027/HYAppUpdate)使用
-配合[客户端gitee](https://gitee.com/mahongyin/HYAppUpdate)使用
+配合[客户端github](https://github.com/1976222027/appupdate/tree/master/AppUpdate)使用
+配合[客户端gitee](https://gitee.com/mahongyin/appupdate/tree/master/AppUpdate)使用
 运行脚本
 
 ```shell
@@ -20,18 +20,18 @@ Mac: ./MacStart.sh
 ```
 或命令行 
 ```shell
-java -jar appupdate-1.1-all.jar
+java -jar appupdate-1.5.0-all.jar
 不需要保留cmd窗口看日志的话运行下面这个
-javaw -jar appupdate-1.1-all.jar
+javaw -jar appupdate-1.5.0-all.jar
 ```
 如果不需要生成差分包不传旧包即可。
 完成过后，拷走out/应用文件夹放到服务端使用即可
 补丁包的名字不要改，改的升级文件也要一致。
 打包可执行程序
 Win:
-jpackage --type app-image --name appupdate --input out/libs --main-jar appupdate-1.1-all.jar --win-console --dest out
+jpackage --type app-image --name appupdate --input out/libs --main-jar appupdate-1.5.0-all.jar --win-console --dest out
 Mac/Linux :
-jpackage --name appupdate --input out/libs --main-jar appupdate-1.1-all.jar --dest out
+jpackage --name appupdate --input out/libs --main-jar appupdate-1.5.0-all.jar --dest out
 | 参数              | 作用             | 示例           | 说明                                                         |
 | ----------------- | ---------------- | -------------- | ------------------------------------------------------------ |
 | --type            | 打包类型         | app-image      | 可选："app-image", "exe", "msi"，这里使用app-image，选择另外两个选项需要安装WiX |
@@ -79,11 +79,10 @@ cmd.bat运行脚本
 //# 获取当前执行脚本的目录
 //set jarPath=%~dp0
 //# 使用 javaw 启动一个jar
-//start javaw -jar %jarPath%appupdate-1.1-all.jar
+//start javaw -jar %jarPath%appupdate-1.5.0-all.jar
 
 
-差异库用的这个
-https://github.com/sisong/HDiffPatch/releases
+[差异库用的这个](https://github.com/sisong/HDiffPatch/releases)
 用命令行创建一个补丁:
 $hdiffz -m-6 -SD -c-zstd-21-24 -d oldPath newPath outDiffFile
 如果文件非常大，可以试试将 -m-6 改为 -s-64

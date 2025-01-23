@@ -91,7 +91,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (MainActivity.this.updateInfo == null) {
-                    requestUpdateApi("http://192.168.1.2/update/xiaomi", new Function1<String, Void>() {
+                    String channel = ChannelUtil.getChannel(MainActivity.this);
+                    String url = "http://192.168.1.2/update/";
+                    if (TextUtils.isEmpty(channel)) {
+                        url = url + channel;
+                    }
+                    requestUpdateApi(url, new Function1<String, Void>() {
                         @Override
                         public Void invoke(String data) {
                             LogUtils.i("请求结果==" + data);
@@ -153,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
     private void setListener() {
         updateCallback = new UpdateCallback() {
             @Override

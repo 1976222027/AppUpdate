@@ -13,7 +13,7 @@ android {
         versionCode 7
         versionName "1.7"
         // 只保留中文
-        resConfigs "zh" ,"en"
+        resConfigs "zh", "en"
     }
 
     //获取local.properties配置文件
@@ -60,6 +60,8 @@ dependencies {
     implementation libs.appcompat
     implementation libs.okhttp3.okhttp
     implementation libs.com.google.gson
+    // 美团多渠道
+    implementation('com.meituan.android.walle:library:1.1.7')
 //    implementation 'com.mhy:appupdate:1.5.0' //local
 //    implementation 'com.gitee.mahongyin:appupdate-aar:1.5.0'
     implementation project(":appupdate")
