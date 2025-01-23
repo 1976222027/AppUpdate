@@ -1,8 +1,7 @@
 下载，合并补丁，安装
-[![](https://jitpack.io/v/com.gitee.mahongyin/appupdate.svg)](https://jitpack.io/#com.gitee.mahongyin/appupdate)
 [![](https://jitpack.io/v/com.gitee.mahongyin/appupdate-aar.svg)](https://jitpack.io/#com.gitee.mahongyin/appupdate-aar)
 ```groovy
-implementation "com.gitee.mahongyin:appupdate-aar:1.5.0"
+implementation "com.gitee.mahongyin:appupdate-aar:version"
 
 ```
 android sdk 9 armv5    
@@ -29,20 +28,20 @@ patchInfo = {versionName:{},...}; Map内包含多个版本信息，versionName�
   "autoUpdate": false, //下载后自动安装
   "newVersionCode": 3940, // 当前最新版本代码
   "newVersionName": "3.9.4", // 当前最新版本代码
-  "patchInfo": {  // 差分包信息,有那个版本，就是有补丁包 ,没有则全量更新
+  "patchInfo": {  // 补丁包信息,有那个版本，就是有补丁包 ,没有则全量更新
     "3.9.2": { // 表示392升394需要下载的补丁包
-      "patchUrl": "dits/3.9.2_3.9.4_apk.patch", //差分包地址，相对此updateVersion.json文件的地址,也可用绝对地址
+      "patchUrl": "dits/3.9.2_3.9.4_apk.patch", //补丁包地址，相对此updateVersion.json文件的地址,也可用绝对地址
       "apkHash": "ea97c8efa490a2eaf7d10b37e63dab0e", // 合成后apk(即版本代码101)的文件md5值
       "oldHash": "ea97c8efa490a2eaf7d10b37e63dab0e", // 旧文件md5值
       "patchHash": "ea97c8efa490a2eaf7d10b37e63dab0e", // 补丁包md5
-      "patchSize": 1114810 // 差分包大小
+      "patchSize": 1114810 // 补丁包大小
     },
     "3.9.1": { //  表示391升393需要下载的补丁包
-      "patchUrl": "dits/3.9.1_3.9.4_apk.patch", //差分包地址，相对此updateVersion.json文件的地址,也可用绝对地址
+      "patchUrl": "dits/3.9.1_3.9.4_apk.patch", //补丁包地址，相对此updateVersion.json文件的地址,也可用绝对地址
       "apkHash": "ea97c8efa490a2eaf7d10b37e63dab0e", // 合成后apk(即版本代码101)的文件md5值
       "oldHash": "ea97c8efa490a2eaf7d10b37e63dab0e", // 旧文件md5值
       "patchHash": "ea97c8efa490a2eaf7d10b37e63dab0e", // 补丁包md5
-      "patchSize": 1114810 // 差分包大小
+      "patchSize": 1114810 // 补丁包大小
     }
   }
 }

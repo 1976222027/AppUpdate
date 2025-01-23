@@ -230,7 +230,7 @@ public class HelloApplication extends Application {
                 updateInfo.setAutoUpdate(autoUpdate);
 //                File[] listFiles = new File("out/dits/" + newVersionName).listFiles();
                 File[] listFiles = new File("out/" + newAppName + "/" + newVersionName).listFiles();
-                //目录下有差分补丁包吗
+                //目录下有补丁补丁包吗
                 if (listFiles != null && listFiles.length > 0) {
                     if (!upPatchUrl.endsWith("/")) {
                         upPatchUrl = upPatchUrl + "/";
@@ -282,7 +282,7 @@ public class HelloApplication extends Application {
         button.setMinWidth(100);
         button.setTextFill(Color.WHITE);
         button.setBackground(new Background(new BackgroundFill(Color.GREEN, new CornerRadii(8), null)));
-        button.setText("1.获取包信息(旧包空则不生成差分包),结果看下面提示");
+        button.setText("1.获取包信息(旧包空则不生成补丁包),结果看下面提示");
         vBox.getChildren().addAll(button, info, vbox);
         vBox.setPadding(new Insets(10, 0, 0, 0));
 
@@ -318,7 +318,7 @@ public class HelloApplication extends Application {
         textOnDragDropped(dragTarget, textFieldOld);
 
         StackPane root = new StackPane();
-        //[获取包信息]生成差分包按钮，不制作差分包 不填旧包即可，但也要点一下生成差分包，用于产出新包md5
+        //[获取包信息]生成补丁包按钮，不制作补丁包 不填旧包即可，但也要点一下生成补丁包，用于产出新包md5
         button.setOnMouseClicked(event -> {
             if (textFieldNew.getText() != null && !textFieldNew.getText().isEmpty()) {
                 config.put("newApkPath", textFieldNew.getText());
@@ -345,13 +345,13 @@ public class HelloApplication extends Application {
                     //保存新版apk信息
 //                    ApkUtil.writeFile(jsonNew, new File("out/dits/apkInfo/" + newVersionName + "_apkInfo.json"));
                     ApkUtil.writeFile(jsonNew, new File(dits, newVersionName + "_apkInfo.json"));
-                    //创建新版本升级目录 输出差分包路径 out/dits/3.9.4/3.9.2_3.9.4_apk.patch
+                    //创建新版本升级目录 输出补丁包路径 out/dits/3.9.4/3.9.2_3.9.4_apk.patch
 //                    File newVer = new File("out/dits/" + newVersionName);
                     File newVer = new File("out/" + newAppName + "/" + newVersionName);
                     if (!newVer.exists()) {
                         newVer.mkdirs();
                     }
-                    if (textFieldOld.getText() != null && !textFieldOld.getText().isEmpty()) {//有旧包，制作差分文件
+                    if (textFieldOld.getText() != null && !textFieldOld.getText().isEmpty()) {//有旧包，制作补丁文件
                         config.put("oldApkPath", textFieldOld.getText());
                         ApkMeta apkMetaOld = ApkUtil.getApkInfo(textFieldOld.getText());
                         if (apkMetaOld != null) {
@@ -365,7 +365,7 @@ public class HelloApplication extends Application {
                             //保存旧版apk信息
 //                            ApkUtil.writeFile(jsonOld, new File("out/dits/apkInfo/" + oldVersionName + "_apkInfo.json"));
                             ApkUtil.writeFile(jsonOld, new File("out/" + newAppName + "/apkInfo/" + oldVersionName + "_apkInfo.json"));
-                            //制作差分包命令
+                            //制作补丁包命令
                             List<String> cmd = new ArrayList<>();
                             //创建一个补丁
                             cmd.add(getCmdByOSName());
@@ -375,8 +375,8 @@ public class HelloApplication extends Application {
                             cmd.add("-d");
                             cmd.add(textFieldOld.getText());//旧版本
                             cmd.add(textFieldNew.getText());//新版本
-//                            cmd.add("out/dits/" + newVersionName + "/" + oldVersionName + "_" + newVersionName + "_apk.patch");//差分包名称
-                            cmd.add("out/" + newAppName + "/" + newVersionName + "/app_" + oldVersionName + "_" + newVersionName + "_apk.patch");//差分包名称
+//                            cmd.add("out/dits/" + newVersionName + "/" + oldVersionName + "_" + newVersionName + "_apk.patch");//补丁包名称
+                            cmd.add("out/" + newAppName + "/" + newVersionName + "/app_" + oldVersionName + "_" + newVersionName + "_apk.patch");//补丁包名称
                             commandStart(cmd, info, progress);
                         }
                     } else {//只有新包
@@ -406,7 +406,7 @@ public class HelloApplication extends Application {
         scrollPane.setFitToWidth(true); // 不显示横向滚动条
         Scene scene = new Scene(scrollPane, 620, 700);
         String myValue = getVersionFromManifest();
-        primaryStage.setTitle("制作apk差分包" + myValue);
+        primaryStage.setTitle("制作apk补丁包" + myValue);
         primaryStage.setScene(scene);
         primaryStage.show();
 

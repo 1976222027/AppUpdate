@@ -91,6 +91,7 @@ $hdiffz -m-6 -SD -c-zstd-21-24 -d oldPath newPath outDiffFile
 $hpatchz oldPath diffFile outNewPath
 
 #### 报错记录
+引入美团jar 后遇到
 1.Process ‘command ‘E:/java11/bin/java.exe‘‘ finished with non-zero exit value 1错误解决
 把build and run using 改为Intellij IDEA
 ![](out/Build.jpg))

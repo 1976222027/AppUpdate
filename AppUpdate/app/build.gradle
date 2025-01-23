@@ -12,19 +12,37 @@ android {
         targetSdk 34
         versionCode 7
         versionName "1.7"
+        // 只保留中文
+        resConfigs "zh" ,"en"
     }
+
+    //获取local.properties配置文件
+    def localProperties = new Properties()
+    def localPropertiesFile = rootProject.file('local.properties')
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.withReader('UTF-8') { reader ->
+            localProperties.load(reader)
+        }
+    }
+    def MY_STORE_FILE = localProperties.getProperty('MY_STORE_FILE')
+    def MY_STORE_PWD = localProperties.getProperty('MY_STORE_PWD')
+    def MY_KEY_ALIAS = localProperties.getProperty('MY_KEY_ALIAS')
+    def MY_KEY_PWD = localProperties.getProperty('MY_KEY_PWD')
+
     signingConfigs {
         create("release") {
-            storeFile file("D:\\ApkKey\\55.jks")
-            storePassword "201055"
-            keyAlias "55"
-            keyPassword "201055"
+            storeFile file(MY_STORE_FILE)
+            storePassword MY_STORE_PWD
+            keyAlias MY_KEY_ALIAS
+            keyPassword MY_KEY_PWD
         }
     }
     buildTypes {
         release {
             signingConfig signingConfigs.getByName("release")
             minifyEnabled true
+            // 移除无用的资源
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
@@ -42,7 +60,7 @@ dependencies {
     implementation libs.appcompat
     implementation libs.okhttp3.okhttp
     implementation libs.com.google.gson
-//    implementation 'com.mhy:appupdate:1.4' //local
-//    implementation 'com.gitee.mahongyin:appupdate-aar:1.4'
+//    implementation 'com.mhy:appupdate:1.5.0' //local
+//    implementation 'com.gitee.mahongyin:appupdate-aar:1.5.0'
     implementation project(":appupdate")
 }

@@ -436,7 +436,11 @@ public final class AppUtils {
         Uri uri = Uri.parse("market://details?id=" + packageName);
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
+        try {
+            context.startActivity(intent);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
     /**
      * 通过浏览器下载
