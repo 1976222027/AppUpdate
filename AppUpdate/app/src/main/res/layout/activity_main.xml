@@ -1,84 +1,91 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/textJson"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxLines="12"
-        android:overScrollMode="always"
-        android:scrollbars="vertical"
-        android:textColor="#ff0000" />
-
-    <TextView
-        android:id="@+id/textView"
-        android:layout_marginTop="30dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#ff0000" />
-
-    <Button
-        android:id="@+id/downloadBtn1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="系统下载"
-        android:textAllCaps="false"
-        android:textSize="18sp" />
-    <Button
-        android:id="@+id/downloadBtn2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="自定义下载"
-        android:textAllCaps="false"
-        android:textSize="18sp" />
-    <Button
-        android:id="@+id/downloadBtn3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="浏览器下载"
-        android:textAllCaps="false"
-        android:textSize="18sp" />
-    <Button
-        android:id="@+id/downloadBtn4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="应用市场更新"
-        android:textAllCaps="false"
-        android:textSize="18sp" />
-
-    <TextView
-        android:id="@+id/tv_progress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="20dp"
         android:gravity="center"
-        android:text="进度" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="10dp"
+        <TextView
+            android:id="@+id/textJson"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="12"
+            android:overScrollMode="always"
+            android:scrollbars="vertical"
+            android:textColor="#ff0000" />
 
-        android:max="100" />
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:textColor="#ff0000" />
 
-    <Button
-        android:id="@+id/cancelBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="取消"
-        android:textAllCaps="false"
-        android:textSize="18sp" />
+        <Button
+            android:id="@+id/downloadBtn1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="系统下载"
+            android:textAllCaps="false"
+            android:textSize="18sp" />
 
-</LinearLayout>
+        <Button
+            android:id="@+id/downloadBtn2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="自定义下载"
+            android:textAllCaps="false"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/downloadBtn3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="浏览器下载"
+            android:textAllCaps="false"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/downloadBtn4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="应用市场更新"
+            android:textAllCaps="false"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/tv_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:text="进度" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+
+            android:max="100" />
+
+        <Button
+            android:id="@+id/cancelBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="取消"
+            android:textAllCaps="false"
+            android:textSize="18sp" />
+    </LinearLayout>
+</ScrollView>

@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private Button downloadBtn1;
     private Button downloadBtn2;
     private Button downloadBtn3;
+    private Button downloadBtn4;
     private Button cancelBtn;
     private TextView textView, textJson, tvProgress;
     private ProgressBar progressBar;
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         downloadBtn1 = findViewById(R.id.downloadBtn1);
         downloadBtn2 = findViewById(R.id.downloadBtn2);
         downloadBtn3 = findViewById(R.id.downloadBtn3);
+        downloadBtn4 = findViewById(R.id.downloadBtn4);
         cancelBtn = findViewById(R.id.cancelBtn);
         progressBar = findViewById(R.id.progressBar);
         textJson.setMovementMethod(ScrollingMovementMethod.getInstance());
@@ -148,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
             }
             if (type == 1) {
                 // 系统下载
-                systemDownload(updateInfo, true, true);
+                systemDownload(updateInfo, true, false);
             } else if (type == 2) {
                 //自定义下载
                 downloadApk(updateInfo);
@@ -212,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
         btnClick(downloadBtn1, 1);
         btnClick(downloadBtn2, 2);
         btnClick(downloadBtn3, 3);
-        findViewById(R.id.downloadBtn4).setOnClickListener(new View.OnClickListener() {
+        downloadBtn4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 AppUtils.openMarket(MainActivity.this, getPackageName());

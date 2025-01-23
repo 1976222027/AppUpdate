@@ -418,16 +418,16 @@ public final class AppUtils {
     /**
      * 以文件的形式打开
      */
-    private static void openFile(File file, Context context) {
-        Intent var2 = new Intent();
-        var2.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        var2.setAction(Intent.ACTION_VIEW);
-        String var3 = getMIMEType(file);
-        var2.setDataAndType(Uri.fromFile(file), var3);
+    public static void openFile(File file, Context context) {
+        Intent intent = new Intent();
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setAction(Intent.ACTION_VIEW);
+        String mimeType = getMIMEType(file);//*/*
+        intent.setDataAndType(Uri.fromFile(file), mimeType);
         try {
-            context.startActivity(var2);
-        } catch (Exception var5) {
-            var5.printStackTrace();
+            context.startActivity(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
             LogUtils.e("没有找到打开此类文件的程序");
         }
     }
@@ -438,10 +438,11 @@ public final class AppUtils {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         try {
             context.startActivity(intent);
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
     /**
      * 通过浏览器下载
      */
