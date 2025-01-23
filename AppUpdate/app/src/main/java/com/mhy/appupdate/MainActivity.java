@@ -86,85 +86,12 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void setListener() {
-        updateCallback = new UpdateCallback() {
-            @Override
-            public void onDownloading(boolean isDownloading) {
-                if (isDownloading) {
-                    LogUtils.i("已经在下载中,请勿重复下载。");
-                    textView.setText("已经在下载中,请勿重复下载。");
-                } else {
-                    LogUtils.i("开始下载…");
-                    textView.setText("开始下载…");
-                }
-            }
-
-            @Override
-            public void onStart(String url) {
-                LogUtils.i("start: " + url);
-            }
-
-            @Override
-            public void onProgress(long progress, long total, boolean isChanged) {
-                if (isChanged) {
-                    LogUtils.i(progress + "/" + total);
-                    int progressInt = Math.round(progress * 1.0f / total * 100.0f);
-                    progressBar.setProgress(progressInt);
-                    tvProgress.setText(String.format("%d%%", progressInt));
-                }
-            }
-
-            @Override
-            public void onFinish(File file) {
-                LogUtils.i("下载完成");
-                textView.setText("下载完成");
-                if (!autoInstall) {//没有自动安装,自己安装
-                    AppUtils.installApk(MainActivity.this, file);
-                }
-            }
-
-            @Override
-            public void onError(Exception e) {
-                LogUtils.i("下载失败");
-                textView.setText("下载失败");
-            }
-
-            @Override
-            public void onCancel() {
-                LogUtils.i("取消下载");
-                textView.setText("取消下载");
-            }
-        };
-
-        cancelBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mAppUpdater != null) {
-                    mAppUpdater.stop();
-                }
-                SystemDownload.getInstance(MainActivity.this).downloadCancel();
-                LogUtils.i("取消下载");
-            }
-        });
-
-        btnClick(downloadBtn1, 1);
-        btnClick(downloadBtn2, 2);
-        btnClick(downloadBtn3, 3);
-        findViewById(R.id.downloadBtn4).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AppUtils.openMarket(MainActivity.this, getPackageName());
-            }
-        });
-
-    }
-
     private void btnClick(Button btn, int type) {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (MainActivity.this.updateInfo == null) {
-                    requestUpdateApi("http://192.168.1.1/xiaomi/update", new Function1<String, Void>() {
+                    requestUpdateApi("http://192.168.1.2/update/xiaomi", new Function1<String, Void>() {
                         @Override
                         public Void invoke(String data) {
                             LogUtils.i("请求结果==" + data);
@@ -226,6 +153,81 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+    private void setListener() {
+        updateCallback = new UpdateCallback() {
+            @Override
+            public void onDownloading(boolean isDownloading) {
+                if (isDownloading) {
+                    LogUtils.i("已经在下载中,请勿重复下载。");
+                    textView.setText("已经在下载中,请勿重复下载。");
+                } else {
+                    LogUtils.i("开始下载…");
+                    textView.setText("开始下载…");
+                }
+            }
+
+            @Override
+            public void onStart(String url) {
+                LogUtils.i("start: " + url);
+            }
+
+            @Override
+            public void onProgress(long progress, long total, boolean isChanged) {
+                if (isChanged) {
+                    LogUtils.i(progress + "/" + total);
+                    int progressInt = Math.round(progress * 1.0f / total * 100.0f);
+                    progressBar.setProgress(progressInt);
+                    tvProgress.setText(String.format("%d%%", progressInt));
+                }
+            }
+
+            @Override
+            public void onFinish(File file) {
+                LogUtils.i("下载完成");
+                textView.setText("下载完成");
+                if (!autoInstall) {//没有自动安装,自己安装
+                    AppUtils.installApk(MainActivity.this, file);
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                LogUtils.i("下载失败");
+                textView.setText("下载失败");
+            }
+
+            @Override
+            public void onCancel() {
+                LogUtils.i("取消下载");
+                textView.setText("取消下载");
+            }
+        };
+
+        btnClick(downloadBtn1, 1);
+        btnClick(downloadBtn2, 2);
+        btnClick(downloadBtn3, 3);
+        findViewById(R.id.downloadBtn4).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AppUtils.openMarket(MainActivity.this, getPackageName());
+            }
+        });
+
+        cancelBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mAppUpdater != null) {
+                    mAppUpdater.stop();
+                }
+                SystemDownload.getInstance(MainActivity.this).downloadCancel();
+                LogUtils.i("取消下载");
+                updateInfo = null;
+                textJson.setText("");
+            }
+        });
+
+    }
+
 
     private void systemDownload(UpdateInfo updateInfo, boolean showNotification, boolean needProgress) {
         try {
