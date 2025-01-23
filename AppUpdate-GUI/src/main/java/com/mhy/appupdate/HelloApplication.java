@@ -70,9 +70,12 @@ public class HelloApplication extends Application {
     private static int upMinVersion = 0;
     private static String upApkUrl = "";
     private static String upPatchUrl = "";
+    /**
+     * 升级功能可用
+     */
     private static Boolean enableUpdate = null;
     /**
-     * 静默更新，后台自动下载
+     * 自动安装
      */
     private static Boolean autoUpdate = null;
 
@@ -83,7 +86,7 @@ public class HelloApplication extends Application {
      * 可滚动
      */
     public static void dragFile(Stage primaryStage) {
-        Label label = new Label("拖拽新版本apk到这里 或 ");
+        Label label = new Label("拖拽新版apk到这里↓ 或 ");
         TextField textFieldNew = new TextField();
         textFieldNew.setMinHeight(40);
         String newPath = config.getString("newApkPath");
@@ -92,7 +95,7 @@ public class HelloApplication extends Application {
         }
         Button btOpen = new Button("选择新版apk文件");
         fileChoose(primaryStage, textFieldNew, btOpen);
-        Label label2 = new Label("拖拽旧版本apk到这里 或 ");
+        Label label2 = new Label("拖拽旧版apk到这里↓ 或 ");
         TextField textFieldOld = new TextField();
         textFieldOld.setMinHeight(40);
         String oldPath = config.getString("oldApkPath");
@@ -105,7 +108,7 @@ public class HelloApplication extends Application {
         info.setTextFill(Color.MAGENTA);
         info.setBorder(new Border(new BorderStroke(Color.GREEN, BorderStrokeStyle.SOLID, new CornerRadii(5), new BorderWidths(2))));
         info.setMinHeight(30);
-        info.setMaxWidth(560);
+        info.setMaxWidth(600);
         info.setWrapText(true);
         // 创建一个垂直布局容器
         VBox vbox = new VBox();
@@ -127,7 +130,7 @@ public class HelloApplication extends Application {
         //初始化设置行数
         textField2.setPrefRowCount(3);
         //设置宽高
-        textField2.setPrefWidth(560);
+        textField2.setPrefWidth(600);
         textField2.setPrefHeight(60);
         upMessage = config.getString("message");
         if (upMessage != null && !upMessage.isEmpty()) {
@@ -147,7 +150,7 @@ public class HelloApplication extends Application {
         }
         autoUpdate = config.getBoolean("autoUpdate");
         if (autoUpdate == null) {
-            autoUpdate = false;
+            autoUpdate = true; // 默认开启自动安装，下载完自动安装
         }
 
         TextArea textField5 = new TextArea();
@@ -155,13 +158,13 @@ public class HelloApplication extends Application {
         textField5.setText(upPatchUrl);
         HBox chbox = new HBox();
 
-        CheckBox cbox = new CheckBox("启用升级功能");
+        CheckBox cbox = new CheckBox("启用升级开关");
         cbox.setPadding(new Insets(5));
         cbox.setSelected(enableUpdate);
         cbox.selectedProperty().addListener((obs, oldValue, newValue) -> {
             enableUpdate = newValue;
         });
-        CheckBox cbox2 = new CheckBox("开启静默升级");// 先wifi下载，后提示安装
+        CheckBox cbox2 = new CheckBox("开启自动安装(下载后自动安装;关闭则只进行下载)");// 先wifi下载，后提示安装
         cbox2.setPadding(new Insets(5));
         cbox2.setSelected(autoUpdate);
         cbox2.selectedProperty().addListener((obs, oldValue, newValue) -> {
@@ -401,7 +404,7 @@ public class HelloApplication extends Application {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setContent(root);
         scrollPane.setFitToWidth(true); // 不显示横向滚动条
-        Scene scene = new Scene(scrollPane, 600, 700);
+        Scene scene = new Scene(scrollPane, 620, 700);
         String myValue = getVersionFromManifest();
         primaryStage.setTitle("制作apk差分包" + myValue);
         primaryStage.setScene(scene);
