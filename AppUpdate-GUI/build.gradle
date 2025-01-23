@@ -176,7 +176,7 @@ static def isWindows() {
 //    return System.properties['os.name'].contains('windows');
 }
 
-/**
+/**生成完整jar和配置到 out/libs
  * 先clean一下
  * 编译jar包+配置文件+运行脚本 都导出到 out/libs
  */
@@ -199,6 +199,16 @@ task sources2Jar(type: Copy, dependsOn: ['clean', 'shadowJar', 'createTextFile']
         into('out/libs/diff')
     }
 }
+//压缩整个out/libs文件
+task compressToZip(type: Zip, dependsOn: ['clearOut']) {
+    // 指定输出ZIP文件的名称
+    archiveFileName = rootProject.name + '-' + mVersion + '.zip'
+    // 指定ZIP文件存放的目录
+    destinationDir = file('out')
+    // 添加要压缩的文件或目录
+    from 'out/libs'
+}
+
 /**
  * 删除已打包过的exe目录
  */
@@ -206,8 +216,9 @@ task clearExeDir(type: Delete) {
     delete('out/'+rootProject.name)
 }
 
-//先 sources2Jar 打出jar包到out/libs
-// 打exe执行文件，exe和jar文件路径不一问题导致config等文件无法找到。。。。先不要打包exe了 用jar吧
+/**打包exe执行文件，PS: exe和jar文件路径不一问题导致config等文件无法找到。。。。先不要打包exe了 用jar吧
+ * 先 sources2Jar 打出jar包到out/libs
+ */
 task execTask(type: Exec, dependsOn: [/*'sources2Jar', */'clearExeDir']) {
     def out = new ByteArrayOutputStream()
     //workingDir './'
@@ -224,8 +235,9 @@ task execTask(type: Exec, dependsOn: [/*'sources2Jar', */'clearExeDir']) {
     println(cmd)
 }
 
-//先 sources2Jar 打出jar包, 确保编译和测试通过后再执行打压缩包
-//打包exe 压缩zip
+/**把打包的exe压缩成zip
+ * 先 sources2Jar 打出jar包, 确保编译和测试通过后再执行打压缩包
+ */
 task compressExeToZip(type: Zip, dependsOn: ['execTask']) {
     if (file("'out/' + rootProject.name").exists()) {
         // 指定输出ZIP文件的名称
@@ -239,14 +251,5 @@ task compressExeToZip(type: Zip, dependsOn: ['execTask']) {
     }
 }
 
-//压缩整个out/libs文件
-task compressToZip(type: Zip, dependsOn: ['clearOut']) {
-    // 指定输出ZIP文件的名称
-    archiveFileName = rootProject.name + '-' + mVersion + '.zip'
-    // 指定ZIP文件存放的目录
-    destinationDir = file('out')
-    // 添加要压缩的文件或目录
-    from 'out/libs'
-}
 //执行完自动执行: 打压缩包,打完压缩包删除lib
 //sources2Jar.finalizedBy(compressExeToZip, compressToZip, clearLib)

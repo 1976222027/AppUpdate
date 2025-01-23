@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (MainActivity.this.updateInfo == null) {
-                    requestUpdateApi("http://192.168.1.7/update", new Function1<String, Void>() {
+                    requestUpdateApi("http://192.168.1.1/xiaomi/update", new Function1<String, Void>() {
                         @Override
                         public Void invoke(String data) {
                             LogUtils.i("请求结果==" + data);
@@ -188,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
         if (updateInfo != null && updateInfo.getCode() == 0) {
             boolean enable = updateInfo.getData().isEnableUpdate();
             if (!enable) {
-                LogUtils.i("功能禁用");
+                LogUtils.i("升级功能禁用");
                 return;
             }
             //最小可用版本
@@ -203,10 +203,10 @@ public class MainActivity extends AppCompatActivity {
             if (packageInfo != null) {//当前版本号
                 versionCode = PackageInfoCompat.getLongVersionCode(packageInfo);
             }
-            // 静默下载,autoInstall要false,并且下载完再弹出安装界面; 强制更新时不可关闭更新弹窗
+            // 下载完自动安装
             autoInstall = updateInfo.getData().isAutoUpdate();
-            boolean force;
             // 自行处弹窗UI
+            boolean force;
             if (versionCode < minVersion) {
                 //强制更新
                 force = true;

@@ -2,7 +2,7 @@
 	"apkHash": "ea95c27bbf8d469f82ace41fc88e3b9d",
 	"apkSize": 31945087,
 	"apkUrl": "http://192.168.1.13/update/app.apk",
-	"autoUpdate": false,
+	"autoUpdate": true,
 	"enableUpdate": true,
 	"message": "央视体育客户端巴黎奥运会版本上线啦！1、奥运会全量直播 2、有趣的直播间玩法：弹幕、三分屏、小窗播放、多路直播，互动不停！3、礼物雨来袭 一起嗨 4、项目资讯，精准传递 5、丰富的赛事数据",
 	"minVersion": 72300,

@@ -240,4 +240,5 @@ tasks.register("createJitPackYml", Task.class) {
 //git push
 //git tag 0.0.5
 //git push --tags
-//去gitee发布发行版，再去jitpack 构建
+//去gitee发布tag发行版，这步不要落下
+//再去jitpack 构建

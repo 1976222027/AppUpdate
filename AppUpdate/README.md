@@ -12,7 +12,7 @@ android sdk 21 arm64
     
 更新策略
 enableUpdate = true; 优先级最高，如果设置为false，整个更新功能都不生效
-autoUpdate = true; 自动静默更新，wifi下自动下载，下载完弹出安装更新
+autoUpdate = true; 下载后自动弹出安装
 minVersion = 0; 本地版本低于该值的要强制更新，为0则不强制更新
 patchInfo = {versionName:{},...}; Map内包含多个版本信息，versionName为本地包的versionName，只要不为空那就是有针对本地版本的更新补丁。
 也就是有补丁先下载补丁，没有则全量下载。补丁优先。
@@ -26,7 +26,7 @@ patchInfo = {versionName:{},...}; Map内包含多个版本信息，versionName�
   "apkHash": "ea97c8efa490a2eaf7d10b37e63dab0e", // 最新apk文件的md5值
   "minVersion": 3900, //最小支持版本 低于此数值的本地版本将强制更新, 0不强制，最新版versioncode则全部强制
   "enableUpdate": true, //更新功能总开关，优先级最高, 可以随时设置更能功能是否可用
-  "autoUpdate": false, //开启静默升级 先wifi下载，后提示安装
+  "autoUpdate": false, //下载后自动安装
   "newVersionCode": 3940, // 当前最新版本代码
   "newVersionName": "3.9.4", // 当前最新版本代码
   "patchInfo": {  // 差分包信息,有那个版本，就是有补丁包 ,没有则全量更新
