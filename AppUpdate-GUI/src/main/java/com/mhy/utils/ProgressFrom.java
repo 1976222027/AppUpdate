@@ -23,19 +23,19 @@ public class ProgressFrom {
         dialogStage.initStyle(StageStyle.TRANSPARENT);
         dialogStage.initModality(Modality.APPLICATION_MODAL);
         // progress bar
-        Label label = new Label("数据加载中...");
+        Label label = new Label("执行中，请耐心等待...");
         label.setTextFill(Color.BLUE);
         progressIndicator.setProgress(-1F);
         VBox vBox = new VBox();
         vBox.setSpacing(10);
         vBox.setBackground(Background.EMPTY);
         vBox.getChildren().addAll(progressIndicator, label);
-        Scene scene = new Scene(vBox);
+        Scene scene = new Scene(vBox, primaryStage.getWidth(), primaryStage.getHeight());
         scene.setFill(null);
         dialogStage.setScene(scene);
     }
 
-    public void activateProgressBar() {
+    public void show() {
         dialogStage.show();
     }
 
@@ -43,7 +43,7 @@ public class ProgressFrom {
         return dialogStage;
     }
 
-    public void cancelProgressBar() {
+    public void close() {
         dialogStage.close();
     }
 }
