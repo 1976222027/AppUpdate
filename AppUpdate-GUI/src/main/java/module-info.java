@@ -1,3 +1,4 @@
+//Java9引入的模块系统
 module com.mhy.appupdate {
     requires javafx.controls;
     requires javafx.fxml;

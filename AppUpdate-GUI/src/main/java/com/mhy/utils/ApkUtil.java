@@ -40,12 +40,6 @@ public class ApkUtil {
             try {
                 ApkFile apkFile = new ApkFile(file);
                 ApkMeta apkMeta = apkFile.getApkMeta();
-                System.out.println("应用名称   :" + apkMeta.getLabel());
-                System.out.println("包名       :" + apkMeta.getPackageName());
-                System.out.println("版本号     :" + apkMeta.getVersionName());
-                System.out.println("图标       :" + apkMeta.getIcon());
-                //System.out.println("v2签名       :" + apkFile.getApkV2Singers());
-                System.out.println("大小       :" + (double) (file.length() * 100 / 1024 / 1024) / 100 + " MB");
                 System.out.println("全部       :===============================");
                 System.out.println(apkMeta.toString());
                 //  拷贝出的icon文件名 根据需要可以随便改
