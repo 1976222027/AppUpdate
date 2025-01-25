@@ -7,11 +7,14 @@ import com.mhy.utils.ProgressFrom;
 import com.mhy.utils.ToastUtil;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -52,7 +55,7 @@ public class HelloApplication extends Application {
 //        if (!dits.exists()) {
 //            dits.mkdirs();
 //        }
-        String configJson = ApkUtil.readFile(new File("config.json"));
+        String configJson = ApkUtil.readFile(new File(getWorkSpaceDir()+"/config.json"));
         config = JSONObject.parseObject(configJson);
         if (config == null) {
             config = new JSONObject();
@@ -203,8 +206,8 @@ public class HelloApplication extends Application {
                 if (!channelOld.equals(channelNew)) {
                     ToastUtil.toast("注意新旧版本渠道不一致。");
                 }
-                //ToastUtil.toast("开始创建升级清单文件");
                 showProgress(primaryStage);
+                ToastUtil.toast("开始创建升级清单文件");
                 upTitle = textField1.getText();
                 upMessage = textField2.getText();
                 upMinVersion = Integer.parseInt(Optional.ofNullable(textField3.getText()).orElse("0"));
@@ -281,11 +284,11 @@ public class HelloApplication extends Application {
                     JsonUtil.createJsonFile(updateInfo, "out/" + newAppName + "/" + newVersionName + "/" + channelNew + "/" + "/updateVersion.json");
                 }
                 //保存配置文件
-                ApkUtil.writeFile(JSONObject.toJSONString(config), new File("config.json"));
-//                ToastUtil.toast("创建完成");
+                ApkUtil.writeFile(JSONObject.toJSONString(config), new File(getWorkSpaceDir()+"/config.json"));
+                ToastUtil.toast("创建完成");
                 hideProgress();
             } else {
-                ToastUtil.toast("请先完成->1.获取包信息");
+                ToastUtil.toast("请先完成->1.检查包信息/生成补丁");
             }
         });
         VBox vBox = new VBox(5);
@@ -294,7 +297,7 @@ public class HelloApplication extends Application {
         button.setMinWidth(100);
         button.setTextFill(Color.WHITE);
         button.setBackground(new Background(new BackgroundFill(Color.GREEN, new CornerRadii(8), null)));
-        button.setText("1.获取包信息(旧包空则不生成补丁包),结果看下面提示");
+        button.setText("1.检查包信息/生成补丁(旧包空则不生成补丁包),结果看下面提示");
         vBox.getChildren().addAll(button, info, vbox);
         vBox.setPadding(new Insets(10, 0, 0, 0));
 
@@ -335,11 +338,11 @@ public class HelloApplication extends Application {
 //        button.setOnMouseClicked(event -> {
             if (textFieldNew.getText() != null && !textFieldNew.getText().isEmpty()) {
                 config.put("newApkPath", textFieldNew.getText());
-                //ToastUtil.toast("获取ing,请稍等");
-                info.setText("获取ing,请稍等");
                 ApkMeta apkMetaNew = ApkUtil.getApkInfo(textFieldNew.getText());
                 if (apkMetaNew != null) {//文件存在
                     showProgress(primaryStage);
+                    ToastUtil.toast("正在检查包信息,请稍等");
+                    info.setText("检查ing,请稍等");
                     //String newMd5 = ApkUtil.getFileMD5(textFieldNew.getText());
                     //拿到新版本号
                     newVersionName = apkMetaNew.getVersionName();
@@ -357,6 +360,7 @@ public class HelloApplication extends Application {
                     //保存新版apk信息
 //                    ApkUtil.writeFile(jsonNew, new File("out/dits/apkInfo/" + newVersionName + "_apkInfo.json"));
                     ApkUtil.writeFile(jsonNew, new File(dits, newVersionName + "_apkInfo.json"));
+
                     //创建新版本升级目录 输出补丁包路径 out/dits/3.9.4/app_3.9.2_3.9.4_apk.patch
 //                    File newVer = new File("out/dits/" + newVersionName);
                     File newVer = new File("out/" + newAppName + "/" + newVersionName);
@@ -397,7 +401,7 @@ public class HelloApplication extends Application {
                     }
                     hideProgress();
                     // 更新apk路径配置文件，其他信息还是旧的怕弄混，只留最后一个保存配置文件的操作
-                    //ApkUtil.writeFile(JSONObject.toJSONString(config), new File("config.json"));
+                    //ApkUtil.writeFile(JSONObject.toJSONString(config), new File(getWorkSpaceDir()+"/config.json"));
                 } else {
                     ToastUtil.toast("获取apk信息失败，请确认文件是否存在");
                     info.setText("获取apk信息失败，请确认文件是否存在");
@@ -487,24 +491,46 @@ public class HelloApplication extends Application {
         String jarPath = HelloApplication.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         String MANIFEST_VERSION_KEY = "Implementation-Version";
         String MANIFEST_BUILD = "Built-Timestamp";
-        System.out.println(jarPath);
+        //System.out.println("Manifest:"+jarPath);
         File f = new File(jarPath);
-        if (f.exists() && f.isDirectory()) {
-            for (String s : f.list()) {
-                if (s.endsWith("jar")) {
-                    jarPath = jarPath + "/" + s;
+        if (f.isFile() && jarPath.endsWith(".jar")) {//是jar
+            try {
+                JarFile jar = new JarFile(jarPath);
+                Manifest manifest = jar.getManifest();
+                Attributes attributes = manifest.getMainAttributes();
+                return "v_" + attributes.getValue(MANIFEST_VERSION_KEY) + "   build_" + attributes.getValue(MANIFEST_BUILD);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {//soure 源码运行 根目录
+                String projectRoot = System.getProperty("user.dir");
+                File f2 = new File(projectRoot + "/gradle.properties");
+                if (f2.exists()) {
+                    Properties properties = new Properties();
+                    properties.load(new FileInputStream(f2));
+                    String a = properties.getProperty("VERSION_NAME");
+                    return "v_" + a;
                 }
+            } catch (Exception e) {
             }
         }
-        try {//production\appupdate.main (拒绝访问。)
-            JarFile jar = new JarFile(jarPath);
-            Manifest manifest = jar.getManifest();
-            Attributes attributes = manifest.getMainAttributes();
-            return "v_" + attributes.getValue(MANIFEST_VERSION_KEY) + "   build_" + attributes.getValue(MANIFEST_BUILD);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         return "";
+    }
+
+    /**
+     * 工作目录
+     */
+    private static String getWorkSpaceDir() {
+        String projectRoot = HelloApplication.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        File f = new File(projectRoot);
+        if (f.isFile() && projectRoot.endsWith(".jar")) {//取jar的父目录
+            projectRoot = f.getParentFile().getAbsolutePath();
+        } else {
+            //soure 源码运行 取运行目录
+            projectRoot = System.getProperty("user.dir");
+        }
+        return projectRoot;
     }
 
     /**
@@ -512,9 +538,9 @@ public class HelloApplication extends Application {
      */
     private static String getCmdByOSName() {
         String osName = System.getProperty("os.name");
-        System.out.println(osName);
         // 当前工作目录
-        String path = System.getProperty("user.dir");
+        String path = getWorkSpaceDir();
+        System.out.println(osName + "-" + path);
         if (osName.startsWith("Mac OS")) {
             // 苹果
             return path + "/diff/macos/hdiffz";
@@ -533,9 +559,10 @@ public class HelloApplication extends Application {
      * @param command 命令行参数
      */
     public static void commandStart(List<String> command, Label info) {
+        System.out.println("patch:");
         command.forEach(v -> System.out.print(v + " "));
         System.out.println();
-        System.out.println();
+
         ProcessBuilder builder = new ProcessBuilder();
         //正常信息和错误信息合并输出
         builder.redirectErrorStream(true);
@@ -557,7 +584,7 @@ public class HelloApplication extends Application {
             e.printStackTrace();
             info.setText("[出错]" + e.toString());
         } finally {
-            //ToastUtil.toast("完成");
+            ToastUtil.toast("完成");
             if (process != null) {
                 process.destroy();
             }

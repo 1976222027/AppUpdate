@@ -162,7 +162,7 @@ javaw -jar """ + rootProject.name + """-""" + mVersion + """-all.jar
 /**
  * 删除使用产出的补丁和清单
  */
-task clearOut(type: Delete) {
+task clearLibOut(type: Delete) {
     delete('out/libs/out')
 }
 //打完压缩包可以删除libs了
@@ -200,7 +200,7 @@ task sources2Jar(type: Copy, dependsOn: ['clean', 'shadowJar', 'createTextFile']
     }
 }
 //压缩整个out/libs文件
-task compressToZip(type: Zip, dependsOn: ['clearOut']) {
+task compressToZip(type: Zip, dependsOn: ['clearLibOut']) {
     // 指定输出ZIP文件的名称
     archiveFileName = rootProject.name + '-' + mVersion + '.zip'
     // 指定ZIP文件存放的目录
@@ -216,16 +216,16 @@ task clearExeDir(type: Delete) {
     delete('out/'+rootProject.name)
 }
 
-/**打包exe执行文件，PS: exe和jar文件路径不一问题导致config等文件无法找到。。。。先不要打包exe了 用jar吧
+/**打包exe执行文件，PS: exe和jar文件路径不一致 导致config等文件无法找到。。。。先不要打包exe了 用jar吧
  * 先 sources2Jar 打出jar包到out/libs
  */
-task execTask(type: Exec, dependsOn: [/*'sources2Jar', */'clearExeDir']) {
+task execTask(type: Exec, dependsOn: [/*'sources2Jar', */ 'clearLibOut', 'clearExeDir']) {//需要clean吗
     def out = new ByteArrayOutputStream()
     //workingDir './'
     def mainJar = rootProject.name + '-' + mVersion + '-all.jar'
     def cmd = ""
     if (isWindows()) {//window: cmd /c
-        cmd = "cmd /c jpackage --type app-image --name " + rootProject.name + " --input ./out/libs --main-jar " + mainJar + " --win-console --dest ./out"
+        cmd = "cmd /c jpackage --type app-image --name " + rootProject.name + " --input ./out/libs --main-jar " + mainJar + " --dest ./out" // --win-console
     } else {//mac linux:  bash -c
         cmd = "jpackage --name " + rootProject.name + " --input out/libs --main-jar " + mainJar + " --dest out"
     }

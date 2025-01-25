@@ -27,7 +27,7 @@ public class ToastUtil {
 
     //默认3秒
     public static void toast(String msg) {
-        toast(msg, 4000);
+        toast(msg, 5000);
     }
 
     /**
